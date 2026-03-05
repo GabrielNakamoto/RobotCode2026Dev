@@ -5,18 +5,18 @@ import org.littletonrobotics.junction.AutoLog;
 public interface SpindexerIO {
   @AutoLog
   public class SpindexerIOInputs {
-    public boolean spinConnected = false;
-    public double spinMotorVoltsApplied = 0.0;
-    public double spinMotorVelocityRadsPerSec = 0.0;
+    public boolean indexConnected = false;
+    public double indexMotorVoltsApplied = 0.0;
+    public double indexMotorVelocityRadsPerSec = 0.0;
 
-    public boolean rampConnected = false;
-    public double rampMotorVoltsApplied = 0.0;
-    public double rampMotorVelocityRadsPerSec = 0.0;
+    public boolean feedConnected = false;
+    public double feedMotorVoltsApplied = 0.0;
+    public double feedMotorVelocityRadsPerSec = 0.0;
   }
 
   public class SpindexerIOOutputs {
-    public double spinMotorVoltageRequested = 0.0;
-    public double rampMotorVoltageRequested = 0.0;
+    public double indexMotorVoltageRequested = 0.0;
+    public double feedMotorVoltageRequested = 0.0;
   }
 
   public default void updateInputs(SpindexerIOInputs inputs) {}

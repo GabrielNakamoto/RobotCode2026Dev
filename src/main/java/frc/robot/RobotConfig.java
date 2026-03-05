@@ -2,6 +2,7 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
 
+import com.ctre.phoenix6.configs.Slot0Configs;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
@@ -14,8 +15,6 @@ import frc.robot.subsystems.drive.TunerConstants;
 import java.util.ArrayList;
 import java.util.List;
 import org.photonvision.simulation.SimCameraProperties;
-
-import com.ctre.phoenix6.configs.Slot0Configs;
 
 /*
  * Complete description of physical and virtual robot configuration
@@ -31,12 +30,10 @@ public class RobotConfig {
     public PIDController toController() {
       return new PIDController(kp, ki, kd);
     }
-		public Slot0Configs toSlot0Configs() {
-			return new Slot0Configs()
-				.withKP(kp)
-				.withKI(ki)
-				.withKD(kd);
-		}
+
+    public Slot0Configs toSlot0Configs() {
+      return new Slot0Configs().withKP(kp).withKI(ki).withKD(kd);
+    }
   }
 
   public record CameraConfig(
@@ -83,13 +80,28 @@ public class RobotConfig {
   public static final class SpindexerConstants {
     public static final int spinMotorId = 20;
     public static final int rampMotorId = 21;
+
+    public static final double feedGearRatio = 1.0;
+    public static final double indexGearRatio = 3.0;
   }
 
-	public static final class TurretConstants {
-		public static final PIDGains hoodGains = new PIDGains(0.0, 0.0, 0.0);
-		public static final PIDGains yawGains = new PIDGains(0.0, 0.0, 0.0);
-		public static final PIDGains shootGains = new PIDGains(0.0, 0.0, 0.0);
-	}
+  public static final class IntakeConstants {
+    public static final double extensionRadius = 0.0;
+    public static final double intakeGearRatio = 1.8667;
+    public static final double extendGearRatio = 1.8364;
+    public static final PIDGains extendGains = new PIDGains(0.0, 0.0, 0.0);
+  }
+
+  public static final class TurretConstants {
+    public static final double hoodGearRatio = 171.600;
+    public static final double yawGearRatio = 42.0;
+    public static final double shootGearRatio = 3.0;
+
+    public static final PIDGains hoodGains = new PIDGains(0.0, 0.0, 0.0);
+    public static final PIDGains yawGains = new PIDGains(0.0, 0.0, 0.0);
+    public static final PIDGains shootGains = new PIDGains(0.0, 0.0, 0.0);
+    public static final Transform3d robotToTurret = Transform3d.kZero;
+  }
 
   // Vision Constants
   public static final class VisionConstants {

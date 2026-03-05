@@ -7,23 +7,23 @@ import frc.robot.util.StateSubsystem;
 
 enum SuperStructureState {
   IDLE,
-  FEED,
+  READY,
+  SHOOT,
 }
 
 public class SuperStructure extends StateSubsystem<SuperStructureState> {
   private final Spindexer spindexer;
-	private final Turret turret;
-	private final Intake intake;
+  private final Turret turret;
+  private final Intake intake;
 
   public SuperStructure(Spindexer spindexer, Turret turret, Intake intake) {
     this.spindexer = spindexer;
-		this.turret = turret;
-		this.intake = intake;
+    this.turret = turret;
+    this.intake = intake;
   }
 
   @Override
-  public void periodic() {
-	}
+  public void periodic() {}
 
   @Override
   public void applyState() {
@@ -31,8 +31,13 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
       case IDLE:
         spindexer.hold();
         break;
-      case FEED:
+      case READY:
+        spindexer.hold();
+        turret.track();
+        break;
+      case SHOOT:
         spindexer.feed();
+        turret.shoot();
         break;
     }
   }

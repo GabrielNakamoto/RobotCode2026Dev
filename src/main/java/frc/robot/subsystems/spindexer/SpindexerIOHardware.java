@@ -1,7 +1,5 @@
 package frc.robot.subsystems.spindexer;
 
-import static edu.wpi.first.units.Units.*;
-
 import com.revrobotics.PersistMode;
 import com.revrobotics.REVLibError;
 import com.revrobotics.RelativeEncoder;
@@ -11,18 +9,19 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
 import edu.wpi.first.math.util.Units;
+import frc.robot.RobotConfig.SpindexerConstants;
 
 public class SpindexerIOHardware implements SpindexerIO {
-  private final SparkFlex spinMotor;
-  private final SparkFlex rampMotor;
-  private final RelativeEncoder spinEncoder;
-  private final RelativeEncoder rampEncoder;
+  private final SparkFlex indexMotor;
+  private final SparkFlex feedMotor;
+  private final RelativeEncoder indexEncoder;
+  private final RelativeEncoder feedEncoder;
 
   public SpindexerIOHardware(int spinId, int rampId) {
-    spinMotor = new SparkFlex(spinId, MotorType.kBrushless);
-    rampMotor = new SparkFlex(rampId, MotorType.kBrushless);
-    spinEncoder = spinMotor.getEncoder();
-    rampEncoder = rampMotor.getEncoder();
+    indexMotor = new SparkFlex(spinId, MotorType.kBrushless);
+    feedMotor = new SparkFlex(rampId, MotorType.kBrushless);
+    indexEncoder = indexMotor.getEncoder();
+    feedEncoder = feedMotor.getEncoder();
 
     SparkFlexConfig spinConfig = new SparkFlexConfig();
     spinConfig.idleMode(IdleMode.kBrake).inverted(true).smartCurrentLimit(60);
@@ -30,28 +29,30 @@ public class SpindexerIOHardware implements SpindexerIO {
     SparkFlexConfig rampConfig = new SparkFlexConfig();
     rampConfig.idleMode(IdleMode.kBrake).inverted(true).smartCurrentLimit(60);
 
-    spinMotor.configure(
+    indexMotor.configure(
         spinConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
-    rampMotor.configure(
+    feedMotor.configure(
         rampConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
   }
 
   @Override
   public void updateInputs(SpindexerIOInputs inputs) {
-    inputs.spinMotorVoltsApplied = spinMotor.getAppliedOutput() * spinMotor.getBusVoltage();
-    inputs.spinMotorVelocityRadsPerSec =
-        Units.rotationsPerMinuteToRadiansPerSecond(spinEncoder.getVelocity() / 3.0);
-    inputs.spinConnected = spinMotor.getLastError() == REVLibError.kOk;
+    inputs.indexMotorVoltsApplied = indexMotor.getAppliedOutput() * indexMotor.getBusVoltage();
+    inputs.indexMotorVelocityRadsPerSec =
+        Units.rotationsPerMinuteToRadiansPerSecond(indexEncoder.getVelocity())
+            / SpindexerConstants.indexGearRatio;
+    inputs.indexConnected = indexMotor.getLastError() == REVLibError.kOk;
 
-    inputs.rampMotorVoltsApplied = rampMotor.getAppliedOutput() * rampMotor.getBusVoltage();
-    inputs.rampMotorVelocityRadsPerSec =
-        Units.rotationsPerMinuteToRadiansPerSecond(rampEncoder.getVelocity());
-    inputs.rampConnected = rampMotor.getLastError() == REVLibError.kOk;
+    inputs.feedMotorVoltsApplied = feedMotor.getAppliedOutput() * feedMotor.getBusVoltage();
+    inputs.feedMotorVelocityRadsPerSec =
+        Units.rotationsPerMinuteToRadiansPerSecond(feedEncoder.getVelocity())
+            / SpindexerConstants.feedGearRatio;
+    inputs.feedConnected = feedMotor.getLastError() == REVLibError.kOk;
   }
 
   @Override
   public void applyOutputs(SpindexerIOOutputs outputs) {
-    spinMotor.setVoltage(outputs.spinMotorVoltageRequested);
-    rampMotor.setVoltage(outputs.rampMotorVoltageRequested);
+    indexMotor.setVoltage(outputs.indexMotorVoltageRequested);
+    feedMotor.setVoltage(outputs.feedMotorVoltageRequested);
   }
 }

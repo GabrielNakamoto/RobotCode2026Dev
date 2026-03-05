@@ -2,10 +2,18 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
 
+import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.*;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.LinearVelocity;
+import frc.robot.RobotConfig.TurretConstants;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveIOInputsAutoLogged;
 import java.util.function.Supplier;
@@ -15,6 +23,8 @@ public class RobotState {
   private Supplier<Pose2d> simulatedDrivePoseSupplier = () -> Pose2d.kZero;
   private Drive drive;
   private DriveIOInputsAutoLogged driveInputs;
+  private TurretState turretState =
+      new TurretState(Radians.of(0.0), Radians.of(0.0), MetersPerSecond.of(0.0));
 
   private static RobotState instance;
 
@@ -37,6 +47,10 @@ public class RobotState {
     if (drive != null) {
       drive.resetOdometry(pose);
     }
+  }
+
+  public void updateTurretState(TurretState state) {
+    this.turretState = state;
   }
 
   public void addVisionMeasurement(VisionObservation estimate) {
@@ -62,5 +76,37 @@ public class RobotState {
     return simulatedDrivePoseSupplier.get();
   }
 
+  public Pair<Pose2d, Translation2d> getCompensatedTurretInfo() {
+    var robotPose = getEstimatedPose();
+    var speeds = getFieldVelocity();
+    var futurePose = robotPose.exp(speeds.toTwist2d(0.003));
+
+    Transform3d robotToTurret = TurretConstants.robotToTurret;
+    Rotation2d heading = driveInputs.gyroYaw;
+
+    // v_hat = v + w x r
+    double turretVx =
+        speeds.vxMetersPerSecond
+            + speeds.omegaRadiansPerSecond
+                * (robotToTurret.getY() * heading.getCos()
+                    - robotToTurret.getX() * heading.getSin());
+    double turretVy =
+        speeds.vxMetersPerSecond
+            + speeds.omegaRadiansPerSecond
+                * (robotToTurret.getX() * heading.getCos()
+                    - robotToTurret.getY() * heading.getSin());
+
+    Pose2d turretPose =
+        futurePose.transformBy(
+            new Transform2d(
+                robotToTurret.getX(),
+                robotToTurret.getY(),
+                robotToTurret.getRotation().toRotation2d()));
+
+    return Pair.of(turretPose, new Translation2d(turretVx, turretVy));
+  }
+
   public record VisionObservation(Pose2d pose, Vector<N3> stdDevs, double timestamp) {}
+
+  public record TurretState(Angle hoodAngle, Angle yawAngle, LinearVelocity flywheelSpeed) {}
 }

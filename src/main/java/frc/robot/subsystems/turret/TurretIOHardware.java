@@ -10,10 +10,10 @@ import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
-
 import frc.robot.RobotConfig.TurretConstants;
 import frc.robot.util.PhoenixSync;
 import frc.robot.util.PhoenixSync.TalonFXSignals;
+import org.littletonrobotics.junction.Logger;
 
 public class TurretIOHardware implements TurretIO {
   private final TalonFX hoodMotor;
@@ -24,11 +24,11 @@ public class TurretIOHardware implements TurretIO {
 
   private PositionTorqueCurrentFOC hoodRequest = new PositionTorqueCurrentFOC(0.0);
   private PositionTorqueCurrentFOC yawRequest = new PositionTorqueCurrentFOC(0.0);
-	private VelocityTorqueCurrentFOC shootRequest = new VelocityTorqueCurrentFOC(0.0);
+  private VelocityTorqueCurrentFOC shootRequest = new VelocityTorqueCurrentFOC(0.0);
 
-	private final TalonFXSignals hoodSignals;
-	private final TalonFXSignals yawSignals;
-	private final TalonFXSignals shootSignals;
+  private final TalonFXSignals hoodSignals;
+  private final TalonFXSignals yawSignals;
+  private final TalonFXSignals shootSignals;
 
   public TurretIOHardware(int hoodId, int yawId, int yawEncoderId, int shootId) {
     hoodMotor = new TalonFX(hoodId);
@@ -37,7 +37,7 @@ public class TurretIOHardware implements TurretIO {
     yawEncoder = new CANcoder(yawEncoderId);
 
     var shootConfig = new TalonFXConfiguration();
-		shootConfig.withSlot0(TurretConstants.shootGains.toSlot0Configs());
+    shootConfig.withSlot0(TurretConstants.shootGains.toSlot0Configs());
     shootConfig.CurrentLimits.withStatorCurrentLimit(0.0).withSupplyCurrentLimit(0.0);
     shootConfig
         .MotorOutput
@@ -45,7 +45,7 @@ public class TurretIOHardware implements TurretIO {
         .withNeutralMode(NeutralModeValue.Brake);
 
     var hoodConfig = new TalonFXConfiguration();
-		hoodConfig.withSlot0(TurretConstants.hoodGains.toSlot0Configs());
+    hoodConfig.withSlot0(TurretConstants.hoodGains.toSlot0Configs());
     hoodConfig
         .MotorOutput
         .withInverted(InvertedValue.Clockwise_Positive)
@@ -56,7 +56,7 @@ public class TurretIOHardware implements TurretIO {
     yawEncoderConfig.MagnetSensor.withMagnetOffset(0.0);
 
     var yawConfig = new TalonFXConfiguration();
-		yawConfig.withSlot0(TurretConstants.yawGains.toSlot0Configs());
+    yawConfig.withSlot0(TurretConstants.yawGains.toSlot0Configs());
     yawConfig
         .MotorOutput
         .withInverted(InvertedValue.Clockwise_Positive)
@@ -71,33 +71,40 @@ public class TurretIOHardware implements TurretIO {
     yawEncoder.getConfigurator().apply(yawEncoderConfig);
     yawMotor.getConfigurator().apply(yawConfig);
 
-		hoodSignals = PhoenixSync.registerTalonFX(hoodMotor, 100);
-		yawSignals = PhoenixSync.registerTalonFX(yawMotor, 100);
-		shootSignals = PhoenixSync.registerTalonFX(shootMotor, 100);
+    hoodSignals = PhoenixSync.registerTalonFX(hoodMotor, 100);
+    yawSignals = PhoenixSync.registerTalonFX(yawMotor, 100);
+    shootSignals = PhoenixSync.registerTalonFX(shootMotor, 100);
   }
 
   @Override
   public void updateInputs(TurretIOInputs inputs) {
-		inputs.hoodConnected = hoodSignals.isConnected();
-		inputs.hoodVoltageApplied = hoodSignals.getVoltage();
-		inputs.hoodVelocityRadsPerSec = hoodSignals.getVelocityRadsPerSec();
-		inputs.hoodPositionRad = hoodSignals.getPositionRads();
+    inputs.hoodConnected = hoodSignals.isConnected();
+    inputs.hoodVoltageApplied = hoodSignals.getVoltage();
+    inputs.hoodVelocityRadsPerSec =
+        hoodSignals.getVelocityRadsPerSec() / TurretConstants.hoodGearRatio;
+    inputs.hoodPositionRad = hoodSignals.getPositionRads() / TurretConstants.hoodGearRatio;
 
-		inputs.yawConnected = yawSignals.isConnected();
-		inputs.yawVoltageApplied = yawSignals.getVoltage();
-		inputs.yawVelocityRadsPerSec = yawSignals.getVelocityRadsPerSec();
-		inputs.yawPositionRad = yawSignals.getPositionRads();
+    inputs.yawConnected = yawSignals.isConnected();
+    inputs.yawVoltageApplied = yawSignals.getVoltage();
+    inputs.yawVelocityRadsPerSec =
+        yawSignals.getVelocityRadsPerSec() / TurretConstants.yawGearRatio;
+    inputs.yawPositionRad = yawSignals.getPositionRads() / TurretConstants.yawGearRatio;
 
-		inputs.shootConnected = shootSignals.isConnected();
-		inputs.shootVoltageApplied = shootSignals.getVoltage();
-		inputs.shootVelocityRadsPerSec = shootSignals.getVelocityRadsPerSec();
-		inputs.shootPositionRad = shootSignals.getPositionRads();
-	}
+    inputs.shootConnected = shootSignals.isConnected();
+    inputs.shootVoltageApplied = shootSignals.getVoltage();
+    inputs.shootVelocityRadsPerSec =
+        shootSignals.getVelocityRadsPerSec() / TurretConstants.shootGearRatio;
+    inputs.shootPositionRad = shootSignals.getPositionRads() / TurretConstants.shootGearRatio;
+  }
 
   @Override
   public void applyOutputs(TurretIOOutputs outputs) {
+    Logger.recordOutput("Turret/YawSetpoint", outputs.yawAngle);
+    Logger.recordOutput("Turret/HoodSetpoint", outputs.hoodAngle);
+    Logger.recordOutput("Turret/FlywheelSetpoint", outputs.flywheelSpeed);
+
     hoodMotor.setControl(hoodRequest.withPosition(outputs.hoodAngle));
     yawMotor.setControl(yawRequest.withPosition(outputs.yawAngle));
-		shootMotor.setControl(shootRequest.withVelocity(outputs.flywheelSpeed));
+    shootMotor.setControl(shootRequest.withVelocity(outputs.flywheelSpeed));
   }
 }

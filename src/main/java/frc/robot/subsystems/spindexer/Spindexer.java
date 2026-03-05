@@ -40,12 +40,12 @@ public class Spindexer extends StateSubsystem<SpindexerState> {
   public void applyState() {
     switch (getCurrentState()) {
       case HOLD:
-        outputs.spinMotorVoltageRequested = 0.0;
-        outputs.rampMotorVoltageRequested = 0.0;
+        outputs.indexMotorVoltageRequested = 0.0;
+        outputs.feedMotorVoltageRequested = 0.0;
         break;
       case FEED:
-        outputs.spinMotorVoltageRequested = 3.0;
-        outputs.rampMotorVoltageRequested = 3.0;
+        outputs.indexMotorVoltageRequested = 3.0;
+        outputs.feedMotorVoltageRequested = 3.0;
         break;
     }
   }
