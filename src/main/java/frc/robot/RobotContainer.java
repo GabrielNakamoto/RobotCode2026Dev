@@ -8,7 +8,21 @@ import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.RobotConfig.IntakeConstants;
+import frc.robot.RobotConfig.TurretConstants;
+import frc.robot.subsystems.azimuth.Azimuth;
+import frc.robot.subsystems.azimuth.AzimuthIO;
+import frc.robot.subsystems.azimuth.AzimuthIOHardware;
 import frc.robot.subsystems.drive.*;
+import frc.robot.subsystems.hood.Hood;
+import frc.robot.subsystems.hood.HoodIO;
+import frc.robot.subsystems.hood.HoodIOHardware;
+import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.intake.IntakeIO;
+import frc.robot.subsystems.intake.IntakeIOHardware;
+import frc.robot.subsystems.launcher.Launcher;
+import frc.robot.subsystems.launcher.LauncherIO;
+import frc.robot.subsystems.launcher.LauncherIOHardware;
 import frc.robot.subsystems.spindexer.*;
 import frc.robot.subsystems.vision.*;
 import frc.robot.util.FuelSim;
@@ -18,6 +32,10 @@ public class RobotContainer {
   public final XboxController driveController = new XboxController(0);
   public final Drive drive;
   public final Spindexer spindexer;
+  public final Intake intake;
+  public final Azimuth azimuth;
+  public final Hood hood;
+  public final Launcher launcher;
   // public final Vision vision;
   public FuelSim fuelSim = null;
 
@@ -34,6 +52,10 @@ public class RobotContainer {
                     TunerConstants.BackLeft,
                     TunerConstants.BackRight));
         spindexer = new Spindexer(new SpindexerIO() {});
+        intake = new Intake(new IntakeIO() {});
+        azimuth = new Azimuth(new AzimuthIO() {});
+        hood = new Hood(new HoodIO() {});
+        launcher = new Launcher(new LauncherIO() {});
         configureFuelSim();
         break;
       case REAL:
@@ -51,10 +73,23 @@ public class RobotContainer {
                 new SpindexerIOHardware(
                     RobotConfig.SpindexerConstants.spinMotorId,
                     RobotConfig.SpindexerConstants.rampMotorId));
+        intake =
+            new Intake(
+                new IntakeIOHardware(IntakeConstants.extendMotorId, IntakeConstants.spinMotorId));
+        azimuth =
+            new Azimuth(
+                new AzimuthIOHardware(
+                    TurretConstants.azimuthMotorId, TurretConstants.azimuthEncoderId));
+        hood = new Hood(new HoodIOHardware(TurretConstants.hoodMotorId));
+        launcher = new Launcher(new LauncherIOHardware(TurretConstants.launcherMotorId));
         break;
       default:
         drive = new Drive(driveController, new DriveIO() {});
         spindexer = new Spindexer(new SpindexerIO() {});
+        intake = new Intake(new IntakeIO() {});
+        azimuth = new Azimuth(new AzimuthIO() {});
+        hood = new Hood(new HoodIO() {});
+        launcher = new Launcher(new LauncherIO() {});
         break;
     }
     PhoenixSync.optimizeAll();

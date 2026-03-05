@@ -86,6 +86,9 @@ public class RobotConfig {
   }
 
   public static final class IntakeConstants {
+    public static final int extendMotorId = 0;
+    public static final int spinMotorId = 0;
+
     public static final double extensionRadius = 0.0;
     public static final double intakeGearRatio = 1.8667;
     public static final double extendGearRatio = 1.8364;
@@ -93,6 +96,11 @@ public class RobotConfig {
   }
 
   public static final class TurretConstants {
+    public static final int hoodMotorId = 0;
+    public static final int azimuthMotorId = 0;
+    public static final int azimuthEncoderId = 0;
+    public static final int launcherMotorId = 0;
+
     public static final double hoodGearRatio = 171.600;
     public static final double yawGearRatio = 42.0;
     public static final double shootGearRatio = 3.0;

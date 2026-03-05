@@ -13,9 +13,9 @@ public class Azimuth extends SubsystemBase {
     this.io = io;
   }
 
-	public Angle getAngle() {
-		return Units.Radians.of(inputs.positionRads);
-	}
+  public Angle getAngle() {
+    return Units.Radians.of(inputs.positionRads);
+  }
 
   public void setAngle(Angle angle) {
     this.io.setAngle(angle);

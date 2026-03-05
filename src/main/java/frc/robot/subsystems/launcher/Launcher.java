@@ -13,9 +13,9 @@ public class Launcher extends SubsystemBase {
     this.io = io;
   }
 
-	public AngularVelocity getSpeed() {
-		return Units.RadiansPerSecond.of(inputs.velocityRadsPerSec);
-	}
+  public AngularVelocity getSpeed() {
+    return Units.RadiansPerSecond.of(inputs.velocityRadsPerSec);
+  }
 
   public void setSpeed(AngularVelocity velocity) {
     this.io.setSpeed(velocity);

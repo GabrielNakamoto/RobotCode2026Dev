@@ -2,18 +2,18 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
 
-import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
+import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
+import edu.wpi.first.math.interpolation.InverseInterpolator;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.*;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.LinearVelocity;
 import frc.robot.RobotConfig.TurretConstants;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveIOInputsAutoLogged;
@@ -21,6 +21,17 @@ import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 
 public class RobotState {
+  private static final InterpolatingTreeMap<Double, Rotation2d> hoodAngleMap =
+      new InterpolatingTreeMap<>(InverseInterpolator.forDouble(), Rotation2d::interpolate);
+  private static final InterpolatingDoubleTreeMap launcherSpeedMap =
+      new InterpolatingDoubleTreeMap();
+  private static final InterpolatingDoubleTreeMap timeOfFlightMap =
+      new InterpolatingDoubleTreeMap();
+
+  static {
+    hoodAngleMap.put(0.0, Rotation2d.kZero);
+  }
+
   private Supplier<Pose2d> simulatedDrivePoseSupplier = () -> Pose2d.kZero;
   private Drive drive;
   private DriveIOInputsAutoLogged driveInputs;
@@ -46,10 +57,6 @@ public class RobotState {
     if (drive != null) {
       drive.resetOdometry(pose);
     }
-  }
-
-  public void updateTurretState(TurretState state) {
-    this.turretState = state;
   }
 
   public void addVisionMeasurement(VisionObservation estimate) {
@@ -102,9 +109,10 @@ public class RobotState {
                 robotToTurret.getY(),
                 robotToTurret.getRotation().toRotation2d()));
 
-		return new TurretState(Radians.of(0), Radians.of(0), RadiansPerSecond.of(0));
+    return new TurretState(Radians.of(0), Radians.of(0), RadiansPerSecond.of(0));
   }
 
   public record VisionObservation(Pose2d pose, Vector<N3> stdDevs, double timestamp) {}
+
   public record TurretState(Angle azimuthAngle, Angle hoodAngle, AngularVelocity launchSpeed) {}
 }

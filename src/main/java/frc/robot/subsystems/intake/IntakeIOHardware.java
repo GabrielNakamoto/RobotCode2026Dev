@@ -26,8 +26,8 @@ public class IntakeIOHardware implements IntakeIO {
 
   private PositionTorqueCurrentFOC extendRequest = new PositionTorqueCurrentFOC(0.0);
 
-  public IntakeIOHardware(TalonFX extendMotor, int spinId) {
-    this.extendMotor = extendMotor;
+  public IntakeIOHardware(int intakeId, int spinId) {
+    this.extendMotor = new TalonFX(intakeId);
     this.spinMotor = new SparkFlex(spinId, MotorType.kBrushless);
     spinEncoder = spinMotor.getEncoder();
 
