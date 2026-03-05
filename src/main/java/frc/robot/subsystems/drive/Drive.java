@@ -19,6 +19,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.FieldConstants;
 import frc.robot.RobotConfig.*;
 import frc.robot.RobotState;
@@ -39,7 +40,7 @@ public class Drive extends StateSubsystem<DriveState> {
   private final DriveIO io;
   private DriveIOInputsAutoLogged inputs = new DriveIOInputsAutoLogged();
 
-  private final XboxController driveController;
+  private final CommandXboxController driveController;
 
   private final PIDController linearController = DriveConstants.toPoseLinearGains.toController();
   private final PIDController omegaController = DriveConstants.toPoseOmegaGains.toController();
@@ -69,7 +70,7 @@ public class Drive extends StateSubsystem<DriveState> {
           .withRotationalDeadband(0.1 * DriveConstants.maxRotationSpeedRadPerSec);
   private SwerveRequest.SwerveDriveBrake brakeRequest = new SwerveRequest.SwerveDriveBrake();
 
-  public Drive(XboxController controller, DriveIO io) {
+  public Drive(CommandXboxController controller, DriveIO io) {
     this.driveController = controller;
     this.io = io;
 

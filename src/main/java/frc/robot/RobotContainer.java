@@ -8,8 +8,10 @@ import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.RobotConfig.IntakeConstants;
 import frc.robot.RobotConfig.TurretConstants;
+import frc.robot.subsystems.SuperStructure;
 import frc.robot.subsystems.azimuth.Azimuth;
 import frc.robot.subsystems.azimuth.AzimuthIO;
 import frc.robot.subsystems.azimuth.AzimuthIOHardware;
@@ -29,13 +31,14 @@ import frc.robot.util.FuelSim;
 import frc.robot.util.PhoenixSync;
 
 public class RobotContainer {
-  public final XboxController driveController = new XboxController(0);
+  public final CommandXboxController driveController = new CommandXboxController(0);
   public final Drive drive;
   public final Spindexer spindexer;
   public final Intake intake;
   public final Azimuth azimuth;
   public final Hood hood;
   public final Launcher launcher;
+	public final SuperStructure superStructure;
   // public final Vision vision;
   public FuelSim fuelSim = null;
 
@@ -92,12 +95,15 @@ public class RobotContainer {
         launcher = new Launcher(new LauncherIO() {});
         break;
     }
+		superStructure = new SuperStructure(spindexer, hood, azimuth, launcher, intake);
     PhoenixSync.optimizeAll();
 
     configureBindings();
   }
 
-  private void configureBindings() {}
+  private void configureBindings() {
+		driveController.rightTrigger(0.3).onTrue(superStructure.intake());
+	}
 
   private void configureFuelSim() {
     fuelSim = new FuelSim();

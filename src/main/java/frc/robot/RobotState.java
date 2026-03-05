@@ -29,12 +29,11 @@ public class RobotState {
   private static final InterpolatingDoubleTreeMap timeOfFlightMap =
       new InterpolatingDoubleTreeMap();
 
-	private static final int kMaxIterations = 10;
-	private static final double kConvergenceEpsilon = 0.001;
+  private static final int kMaxIterations = 10;
+  private static final double kConvergenceEpsilon = 0.001;
 
   static {
-		// TODO: measure
-    hoodAngleMap.put(0.0, Rotation2d.kZero);
+    // TODO: measure
   }
 
   private Supplier<Pose2d> simulatedDrivePoseSupplier = () -> Pose2d.kZero;
@@ -93,47 +92,51 @@ public class RobotState {
     Pose2d futurePose = robotPose.exp(speeds.toTwist2d(0.003));
     Transform3d robotToTurret = TurretConstants.robotToTurret;
 
-		// Phase Shifted Turret Pose
+    // Phase Shifted Turret Pose
     Pose2d turretPose =
         futurePose.transformBy(
             new Transform2d(
                 robotToTurret.getX(),
                 robotToTurret.getY(),
                 robotToTurret.getRotation().toRotation2d()));
-		Translation2d target = FieldConstants.hubCenterPoint.getTranslation();
-		double targetDistance = turretPose.getTranslation().getDistance(target);
+    Translation2d target = FieldConstants.hubCenterPoint.getTranslation();
+    double targetDistance = turretPose.getTranslation().getDistance(target);
 
     // v_turret = v_robot + w x r_turret
-    double r_turretVx = speeds.vxMetersPerSecond - speeds.omegaRadiansPerSecond * robotToTurret.getY();
-    double r_turretVy = speeds.vyMetersPerSecond + speeds.omegaRadiansPerSecond * robotToTurret.getX();
-		Translation2d f_turretV = new Translation2d(r_turretVx, r_turretVy).rotateBy(driveInputs.gyroYaw);
-		double f_turretVx = f_turretV.getX();
-		double f_turretVy = f_turretV.getY();
+    double r_turretVx =
+        speeds.vxMetersPerSecond - speeds.omegaRadiansPerSecond * robotToTurret.getY();
+    double r_turretVy =
+        speeds.vyMetersPerSecond + speeds.omegaRadiansPerSecond * robotToTurret.getX();
+    Translation2d f_turretV =
+        new Translation2d(r_turretVx, r_turretVy).rotateBy(driveInputs.gyroYaw);
+    double f_turretVx = f_turretV.getX();
+    double f_turretVy = f_turretV.getY();
 
-		double timeOfFlight = timeOfFlightMap.get(targetDistance);
-		Pose2d lookaheadPose = turretPose;
-		double lookaheadTargetDist = targetDistance;
+    double timeOfFlight = timeOfFlightMap.get(targetDistance);
+    Pose2d lookaheadPose = turretPose;
+    double lookaheadTargetDist = targetDistance;
 
-		// Iterative lookahead adjust
-		for (int i=0; i<kMaxIterations; ++i) {
-			double prevDist = lookaheadTargetDist;
-			timeOfFlight = timeOfFlightMap.get(lookaheadTargetDist);
-			lookaheadPose = new Pose2d(
-				turretPose.getTranslation().plus(new Translation2d(
-					f_turretVx * timeOfFlight, f_turretVy * timeOfFlight
-				)),
-				turretPose.getRotation()
-			);
-			lookaheadTargetDist = lookaheadPose.getTranslation().getDistance(target);
-			if (Math.abs(lookaheadTargetDist - prevDist) < kConvergenceEpsilon) break;
-		}
+    // Iterative lookahead adjust
+    for (int i = 0; i < kMaxIterations; ++i) {
+      double prevDist = lookaheadTargetDist;
+      timeOfFlight = timeOfFlightMap.get(lookaheadTargetDist);
+      lookaheadPose =
+          new Pose2d(
+              turretPose
+                  .getTranslation()
+                  .plus(new Translation2d(f_turretVx * timeOfFlight, f_turretVy * timeOfFlight)),
+              turretPose.getRotation());
+      lookaheadTargetDist = lookaheadPose.getTranslation().getDistance(target);
+      if (Math.abs(lookaheadTargetDist - prevDist) < kConvergenceEpsilon) break;
+    }
 
-		// Calculate remaining parameters
-		Rotation2d hoodAngle = hoodAngleMap.get(lookaheadTargetDist);
-		double launchSpeed = launcherSpeedMap.get(lookaheadTargetDist);
-		Rotation2d azimuth = target.minus(lookaheadPose.getTranslation()).getAngle();
+    // Calculate remaining parameters
+    Rotation2d hoodAngle = hoodAngleMap.get(lookaheadTargetDist);
+    double launchSpeed = launcherSpeedMap.get(lookaheadTargetDist);
+    Rotation2d azimuth = target.minus(lookaheadPose.getTranslation()).getAngle();
 
-    return new TurretState(azimuth.getMeasure(), hoodAngle.getMeasure(), RadiansPerSecond.of(launchSpeed));
+    return new TurretState(
+        azimuth.getMeasure(), hoodAngle.getMeasure(), RadiansPerSecond.of(launchSpeed));
   }
 
   public record VisionObservation(Pose2d pose, Vector<N3> stdDevs, double timestamp) {}

@@ -1,5 +1,7 @@
 package frc.robot.subsystems;
 
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.RobotState;
 import frc.robot.RobotState.TurretState;
 import frc.robot.subsystems.azimuth.Azimuth;
@@ -33,6 +35,14 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
 
   @Override
   public void periodic() {}
+
+	public Command intake() {
+		return Commands.runOnce(() -> setState(SuperStructureState.INTAKE));
+	}
+
+	public Command shoot() {
+		return Commands.runOnce(() -> setState(SuperStructureState.SHOOT));
+	}
 
   @Override
   public void applyState() {
