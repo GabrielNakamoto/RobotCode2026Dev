@@ -21,26 +21,34 @@ public class IntakeIOHardware implements IntakeIO {
   private final TalonFX extendMotor;
   private final TalonFXSignals extendSignals;
 
-  private final SparkFlex spinMotor;
-  private final RelativeEncoder spinEncoder;
+  private final SparkFlex intakeMotor;
+  private final RelativeEncoder intakeEncoder;
 
   private PositionTorqueCurrentFOC extendRequest = new PositionTorqueCurrentFOC(0.0);
 
-  public IntakeIOHardware(int intakeId, int spinId) {
-    this.extendMotor = new TalonFX(intakeId);
-    this.spinMotor = new SparkFlex(spinId, MotorType.kBrushless);
-    spinEncoder = spinMotor.getEncoder();
+  public IntakeIOHardware(int extendId, int intakeId) {
+    this.extendMotor = new TalonFX(extendId);
+    this.intakeMotor = new SparkFlex(intakeId, MotorType.kBrushless);
+    intakeEncoder = intakeMotor.getEncoder();
 
-    var spinConfig = new SparkFlexConfig();
-    spinConfig.idleMode(IdleMode.kBrake).inverted(true).smartCurrentLimit(60);
-    spinMotor.configure(
-        spinConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
+    var intakeConfig = new SparkFlexConfig();
+    intakeConfig.idleMode(IdleMode.kBrake).inverted(true).smartCurrentLimit(60);
+    intakeConfig.encoder.positionConversionFactor(IntakeConstants.intakeGearRatio);
+    intakeMotor.configure(
+        intakeConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
 
     var extendConfig = new TalonFXConfiguration();
+    extendConfig.Feedback.withSensorToMechanismRatio(IntakeConstants.extendGearRatio);
     extendConfig.withSlot0(IntakeConstants.extendGains.toSlot0Configs());
     extendMotor.getConfigurator().apply(extendConfig);
+    extendConfig
+        .SoftwareLimitSwitch
+        .withForwardSoftLimitEnable(true)
+        .withForwardSoftLimitThreshold(0.0)
+        .withReverseSoftLimitEnable(true)
+        .withReverseSoftLimitThreshold(0.0);
 
-    extendSignals = PhoenixSync.registerTalonFX(extendMotor, IntakeConstants.extendGearRatio, 50);
+    extendSignals = PhoenixSync.registerTalonFX(extendMotor, 50);
   }
 
   @Override
@@ -50,21 +58,20 @@ public class IntakeIOHardware implements IntakeIO {
     inputs.extendVelocityRadsPerSec = extendSignals.getVelocityRadsPerSec();
     inputs.extendVoltageApplied = extendSignals.getVoltage();
 
-    inputs.spinConnected = spinMotor.getLastError() == REVLibError.kOk;
-    inputs.spinVoltageApplied = spinMotor.getAppliedOutput() * spinMotor.getBusVoltage();
-    inputs.spinVelocityRadsPerSec =
-        Units.rotationsPerMinuteToRadiansPerSecond(spinEncoder.getVelocity())
-            / IntakeConstants.intakeGearRatio;
+    inputs.intakeConnected = intakeMotor.getLastError() == REVLibError.kOk;
+    inputs.intakeVoltageApplied = intakeMotor.getAppliedOutput() * intakeMotor.getBusVoltage();
+    inputs.intakeVelocityRadsPerSec =
+        Units.rotationsPerMinuteToRadiansPerSecond(intakeEncoder.getVelocity());
   }
 
   @Override
   public void applyOutputs(IntakeIOOutputs outputs) {
     Logger.recordOutput("Intake/extensionSetpoint", outputs.extendMeters);
-    Logger.recordOutput("Intake/spinSetpoint", outputs.spinVoltage);
+    Logger.recordOutput("Intake/intakeSetpoint", outputs.intakeVoltage);
 
     double extendRadians =
         outputs.extendMeters / IntakeConstants.extensionRadius * IntakeConstants.extendGearRatio;
     extendMotor.setControl(extendRequest.withPosition(extendRadians));
-    spinMotor.setVoltage(outputs.spinVoltage);
+    intakeMotor.setVoltage(outputs.intakeVoltage);
   }
 }

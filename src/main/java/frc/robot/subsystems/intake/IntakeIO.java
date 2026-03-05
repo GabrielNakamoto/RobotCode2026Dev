@@ -10,13 +10,13 @@ public interface IntakeIO {
     public double extendVoltageApplied = 0.0;
     public double extendVelocityRadsPerSec = 0.0;
 
-    public boolean spinConnected = false;
-    public double spinVoltageApplied = 0.0;
-    public double spinVelocityRadsPerSec = 0.0;
+    public boolean intakeConnected = false;
+    public double intakeVoltageApplied = 0.0;
+    public double intakeVelocityRadsPerSec = 0.0;
   }
 
   public class IntakeIOOutputs {
-    public double spinVoltage = 0.0;
+    public double intakeVoltage = 0.0;
     public double extendMeters = 0.0;
   }
 

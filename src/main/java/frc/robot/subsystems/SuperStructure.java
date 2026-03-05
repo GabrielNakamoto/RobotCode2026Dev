@@ -1,8 +1,10 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.RobotState;
 import frc.robot.RobotState.TurretState;
 import frc.robot.subsystems.azimuth.Azimuth;
 import frc.robot.subsystems.hood.Hood;
@@ -31,25 +33,30 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
     this.azimuth = azimuth;
     this.launcher = launcher;
     this.intake = intake;
+
+    setState(SuperStructureState.IDLE);
   }
 
   @Override
-  public void periodic() {}
+  public void periodic() {
+    applyState();
+  }
 
-	public Command intake() {
-		return Commands.runOnce(() -> setState(SuperStructureState.INTAKE));
-	}
+  public Command intake() {
+    return Commands.runOnce(() -> setState(SuperStructureState.INTAKE));
+  }
 
-	public Command shoot() {
-		return Commands.runOnce(() -> setState(SuperStructureState.SHOOT));
-	}
+  public Command shoot() {
+    return Commands.runOnce(() -> setState(SuperStructureState.SHOOT));
+  }
 
   @Override
   public void applyState() {
-    TurretState setpoints =
-        RobotState.getInstance()
-            .getTurretSetpoints(
-                new TurretState(azimuth.getAngle(), hood.getAngle(), launcher.getSpeed()));
+    TurretState setpoints = new TurretState(Radians.of(0), Radians.of(0), RadiansPerSecond.of(0));
+    /*TurretState setpoints =
+    RobotState.getInstance()
+        .getTurretSetpoints(
+            new TurretState(azimuth.getAngle(), hood.getAngle(), launcher.getSpeed()));*/
 
     // Always track hub
     azimuth.setAngle(setpoints.azimuthAngle());

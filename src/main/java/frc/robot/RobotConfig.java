@@ -78,8 +78,8 @@ public class RobotConfig {
   }
 
   public static final class SpindexerConstants {
-    public static final int spinMotorId = 20;
-    public static final int rampMotorId = 21;
+    public static final int indexMotorId = 20;
+    public static final int feedMotorId = 21;
 
     public static final double feedGearRatio = 1.0;
     public static final double indexGearRatio = 3.0;
@@ -87,7 +87,7 @@ public class RobotConfig {
 
   public static final class IntakeConstants {
     public static final int extendMotorId = 0;
-    public static final int spinMotorId = 0;
+    public static final int intakeMotorId = 0;
 
     public static final double extensionRadius = 0.0;
     public static final double intakeGearRatio = 1.8667;
@@ -102,11 +102,11 @@ public class RobotConfig {
     public static final int launcherMotorId = 0;
 
     public static final double hoodGearRatio = 171.600;
-    public static final double yawGearRatio = 42.0;
-    public static final double shootGearRatio = 3.0;
+    public static final double azimuthGearRatio = 42.0;
+    public static final double launcherGearRatio = 3.0;
 
     public static final PIDGains hoodGains = new PIDGains(0.0, 0.0, 0.0);
-    public static final PIDGains yawGains = new PIDGains(0.0, 0.0, 0.0);
+    public static final PIDGains azimuthGains = new PIDGains(0.0, 0.0, 0.0);
     public static final PIDGains shootGains = new PIDGains(0.0, 0.0, 0.0);
     public static final Transform3d robotToTurret = Transform3d.kZero;
   }

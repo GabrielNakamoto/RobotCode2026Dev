@@ -18,36 +18,36 @@ public class SpindexerIOHardware implements SpindexerIO {
   private final RelativeEncoder indexEncoder;
   private final RelativeEncoder feedEncoder;
 
-  public SpindexerIOHardware(int spinId, int rampId) {
-    indexMotor = new SparkFlex(spinId, MotorType.kBrushless);
-    feedMotor = new SparkFlex(rampId, MotorType.kBrushless);
+  public SpindexerIOHardware(int indexId, int feedId) {
+    indexMotor = new SparkFlex(indexId, MotorType.kBrushless);
+    feedMotor = new SparkFlex(feedId, MotorType.kBrushless);
     indexEncoder = indexMotor.getEncoder();
     feedEncoder = feedMotor.getEncoder();
 
-    SparkFlexConfig spinConfig = new SparkFlexConfig();
-    spinConfig.idleMode(IdleMode.kBrake).inverted(true).smartCurrentLimit(60);
+    SparkFlexConfig indexConfig = new SparkFlexConfig();
+    indexConfig.idleMode(IdleMode.kBrake).inverted(true).smartCurrentLimit(60);
+    indexConfig.encoder.positionConversionFactor(SpindexerConstants.indexGearRatio);
 
-    SparkFlexConfig rampConfig = new SparkFlexConfig();
-    rampConfig.idleMode(IdleMode.kBrake).inverted(true).smartCurrentLimit(60);
+    SparkFlexConfig feedConfig = new SparkFlexConfig();
+    feedConfig.idleMode(IdleMode.kBrake).inverted(true).smartCurrentLimit(60);
+    feedConfig.encoder.positionConversionFactor(SpindexerConstants.feedGearRatio);
 
     indexMotor.configure(
-        spinConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
+        indexConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
     feedMotor.configure(
-        rampConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
+        feedConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
   }
 
   @Override
   public void updateInputs(SpindexerIOInputs inputs) {
     inputs.indexMotorVoltsApplied = indexMotor.getAppliedOutput() * indexMotor.getBusVoltage();
     inputs.indexMotorVelocityRadsPerSec =
-        Units.rotationsPerMinuteToRadiansPerSecond(indexEncoder.getVelocity())
-            / SpindexerConstants.indexGearRatio;
+        Units.rotationsPerMinuteToRadiansPerSecond(indexEncoder.getVelocity());
     inputs.indexConnected = indexMotor.getLastError() == REVLibError.kOk;
 
     inputs.feedMotorVoltsApplied = feedMotor.getAppliedOutput() * feedMotor.getBusVoltage();
     inputs.feedMotorVelocityRadsPerSec =
-        Units.rotationsPerMinuteToRadiansPerSecond(feedEncoder.getVelocity())
-            / SpindexerConstants.feedGearRatio;
+        Units.rotationsPerMinuteToRadiansPerSecond(feedEncoder.getVelocity());
     inputs.feedConnected = feedMotor.getLastError() == REVLibError.kOk;
   }
 

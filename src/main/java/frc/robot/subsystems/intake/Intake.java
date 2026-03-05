@@ -45,11 +45,11 @@ public class Intake extends StateSubsystem<IntakeState> {
         break;
       case RETRACT:
         outputs.extendMeters = 0.0;
-        outputs.spinVoltage = 0.0;
+        outputs.intakeVoltage = 0.0;
         break;
       case INTAKE:
-        outputs.extendMeters = Units.inchesToMeters(5);
-        outputs.spinVoltage = 4.0;
+        outputs.extendMeters = Units.inchesToMeters(10.5);
+        outputs.intakeVoltage = 4.0;
         break;
     }
   }

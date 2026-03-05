@@ -9,6 +9,7 @@ import edu.wpi.first.units.measure.Angle;
 import frc.robot.RobotConfig.TurretConstants;
 import frc.robot.util.PhoenixSync;
 import frc.robot.util.PhoenixSync.TalonFXSignals;
+import org.littletonrobotics.junction.Logger;
 
 public class HoodIOHardware implements HoodIO {
   private final TalonFX motor;
@@ -24,10 +25,15 @@ public class HoodIOHardware implements HoodIO {
     config.withSlot0(TurretConstants.hoodGains.toSlot0Configs());
     config.MotorOutput.withInverted(InvertedValue.Clockwise_Positive)
         .withNeutralMode(NeutralModeValue.Brake);
+    config.CurrentLimits.withStatorCurrentLimit(20);
+    config.SoftwareLimitSwitch.withForwardSoftLimitEnable(true)
+        .withForwardSoftLimitThreshold(0.0)
+        .withReverseSoftLimitEnable(true)
+        .withForwardSoftLimitThreshold(0.0);
 
     motor.getConfigurator().apply(config);
 
-    this.signals = PhoenixSync.registerTalonFX(motor, TurretConstants.hoodGearRatio, 50);
+    this.signals = PhoenixSync.registerTalonFX(motor, 150);
   }
 
   @Override
@@ -39,6 +45,7 @@ public class HoodIOHardware implements HoodIO {
   }
 
   public void setAngle(Angle angle) {
+    Logger.recordOutput("Hood/setpoint", angle);
     motor.setControl(request.withPosition(angle));
   }
 }

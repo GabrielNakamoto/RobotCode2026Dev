@@ -5,7 +5,6 @@
 package frc.robot;
 
 import edu.wpi.first.units.Units;
-import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -38,7 +37,7 @@ public class RobotContainer {
   public final Azimuth azimuth;
   public final Hood hood;
   public final Launcher launcher;
-	public final SuperStructure superStructure;
+  public final SuperStructure superStructure;
   // public final Vision vision;
   public FuelSim fuelSim = null;
 
@@ -74,11 +73,11 @@ public class RobotContainer {
         spindexer =
             new Spindexer(
                 new SpindexerIOHardware(
-                    RobotConfig.SpindexerConstants.spinMotorId,
-                    RobotConfig.SpindexerConstants.rampMotorId));
+                    RobotConfig.SpindexerConstants.indexMotorId,
+                    RobotConfig.SpindexerConstants.feedMotorId));
         intake =
             new Intake(
-                new IntakeIOHardware(IntakeConstants.extendMotorId, IntakeConstants.spinMotorId));
+                new IntakeIOHardware(IntakeConstants.extendMotorId, IntakeConstants.intakeMotorId));
         azimuth =
             new Azimuth(
                 new AzimuthIOHardware(
@@ -95,15 +94,16 @@ public class RobotContainer {
         launcher = new Launcher(new LauncherIO() {});
         break;
     }
-		superStructure = new SuperStructure(spindexer, hood, azimuth, launcher, intake);
+    superStructure = new SuperStructure(spindexer, hood, azimuth, launcher, intake);
     PhoenixSync.optimizeAll();
 
     configureBindings();
   }
 
   private void configureBindings() {
-		driveController.rightTrigger(0.3).onTrue(superStructure.intake());
-	}
+    driveController.leftTrigger(0.3).onTrue(superStructure.intake());
+    driveController.rightTrigger(0.3).onTrue(superStructure.shoot());
+  }
 
   private void configureFuelSim() {
     fuelSim = new FuelSim();

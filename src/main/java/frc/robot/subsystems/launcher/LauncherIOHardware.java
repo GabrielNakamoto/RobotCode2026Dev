@@ -9,6 +9,7 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import frc.robot.RobotConfig.TurretConstants;
 import frc.robot.util.PhoenixSync;
 import frc.robot.util.PhoenixSync.TalonFXSignals;
+import org.littletonrobotics.junction.Logger;
 
 public class LauncherIOHardware implements LauncherIO {
   private final TalonFX motor;
@@ -22,12 +23,14 @@ public class LauncherIOHardware implements LauncherIO {
     // Configure motor
     var config = new TalonFXConfiguration();
     config.withSlot0(TurretConstants.shootGains.toSlot0Configs());
+    config.Feedback.withSensorToMechanismRatio(TurretConstants.launcherGearRatio);
+    config.CurrentLimits.withStatorCurrentLimit(20);
     config.MotorOutput.withInverted(InvertedValue.Clockwise_Positive)
         .withNeutralMode(NeutralModeValue.Brake);
 
     motor.getConfigurator().apply(config);
 
-    this.signals = PhoenixSync.registerTalonFX(motor, TurretConstants.shootGearRatio, 50);
+    this.signals = PhoenixSync.registerTalonFX(motor, 150);
   }
 
   @Override
@@ -40,6 +43,7 @@ public class LauncherIOHardware implements LauncherIO {
 
   @Override
   public void setSpeed(AngularVelocity velocity) {
+    Logger.recordOutput("Launcher/setpoint", velocity);
     motor.setControl(request.withVelocity(velocity));
   }
 }

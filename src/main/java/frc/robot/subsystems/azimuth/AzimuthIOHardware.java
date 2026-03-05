@@ -13,6 +13,7 @@ import edu.wpi.first.units.measure.Angle;
 import frc.robot.RobotConfig.TurretConstants;
 import frc.robot.util.PhoenixSync;
 import frc.robot.util.PhoenixSync.TalonFXSignals;
+import org.littletonrobotics.junction.Logger;
 
 public class AzimuthIOHardware implements AzimuthIO {
   private final TalonFX motor;
@@ -33,17 +34,21 @@ public class AzimuthIOHardware implements AzimuthIO {
 
     // Configure motor
     var config = new TalonFXConfiguration();
-    config.withSlot0(TurretConstants.yawGains.toSlot0Configs());
+    config.withSlot0(TurretConstants.azimuthGains.toSlot0Configs());
+    config.CurrentLimits.withStatorCurrentLimit(60);
     config.MotorOutput.withInverted(InvertedValue.Clockwise_Positive)
         .withNeutralMode(NeutralModeValue.Brake);
-    config.Feedback.FeedbackRemoteSensorID = encoderId;
-    config.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
-    config.Feedback.SensorToMechanismRatio = 0.0;
-    config.Feedback.RotorToSensorRatio = 0.0;
+    config.Feedback.withRemoteCANcoder(encoder)
+        .withFeedbackSensorSource(FeedbackSensorSourceValue.FusedCANcoder)
+        .withSensorToMechanismRatio(1.0)
+        .withRotorToSensorRatio(TurretConstants.azimuthGearRatio);
+    config.SoftwareLimitSwitch.withForwardSoftLimitThreshold(0.0)
+        .withReverseSoftLimitEnable(true)
+        .withForwardSoftLimitThreshold(0.0);
 
     motor.getConfigurator().apply(config);
 
-    this.signals = PhoenixSync.registerTalonFX(motor, TurretConstants.yawGearRatio, 50);
+    this.signals = PhoenixSync.registerTalonFX(motor, 150);
   }
 
   @Override
@@ -56,6 +61,7 @@ public class AzimuthIOHardware implements AzimuthIO {
 
   @Override
   public void setAngle(Angle angle) {
+    Logger.recordOutput("Azimuth/Setpoint", angle);
     motor.setControl(request.withPosition(angle));
   }
 }
