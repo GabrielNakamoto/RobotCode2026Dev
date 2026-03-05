@@ -69,8 +69,7 @@ public class IntakeIOHardware implements IntakeIO {
     Logger.recordOutput("Intake/extensionSetpoint", outputs.extendMeters);
     Logger.recordOutput("Intake/intakeSetpoint", outputs.intakeVoltage);
 
-    double extendRadians =
-        outputs.extendMeters / IntakeConstants.extensionRadius * IntakeConstants.extendGearRatio;
+    double extendRadians = outputs.extendMeters / IntakeConstants.extensionRadius;
     extendMotor.setControl(extendRequest.withPosition(extendRadians));
     intakeMotor.setVoltage(outputs.intakeVoltage);
   }

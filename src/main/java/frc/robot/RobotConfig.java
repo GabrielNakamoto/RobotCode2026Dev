@@ -58,8 +58,6 @@ public class RobotConfig {
 
   // Drivebase Constants/Config
   public static final class DriveConstants {
-    public static final Translation2d[] moduleTranslations = new Translation2d[4];
-
     public static final double maxDriveSpeedMps =
         TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
     public static final double maxDriveAccelMps = 9.0;
@@ -86,32 +84,35 @@ public class RobotConfig {
   }
 
   public static final class IntakeConstants {
-    public static final int extendMotorId = 0;
-    public static final int intakeMotorId = 0;
+    public static final int extendMotorId = 30;
+    public static final int intakeMotorId = 31;
 
-    public static final double extensionRadius = 0.0;
+    public static final double extensionRadius = Units.inchesToMeters(0.7);
     public static final double intakeGearRatio = 1.8667;
     public static final double extendGearRatio = 1.8364;
     public static final PIDGains extendGains = new PIDGains(0.0, 0.0, 0.0);
+
+    public static final double maxExtensionMeters = Units.inchesToMeters(10.5);
+    public static final double maxRetractionMeters = Units.inchesToMeters(1.5);
   }
 
   public static final class TurretConstants {
-    public static final int hoodMotorId = 0;
-    public static final int azimuthMotorId = 0;
-    public static final int azimuthEncoderId = 0;
-    public static final int launcherMotorId = 0;
+    public static final int hoodMotorId = 40;
+    public static final int azimuthMotorId = 41;
+    public static final int azimuthEncoderId = 42;
+    public static final int launcherMotorId = 43;
 
     public static final double hoodGearRatio = 171.600;
     public static final double azimuthGearRatio = 42.0;
     public static final double launcherGearRatio = 3.0;
 
+    // TODO: gains + transform
     public static final PIDGains hoodGains = new PIDGains(0.0, 0.0, 0.0);
     public static final PIDGains azimuthGains = new PIDGains(0.0, 0.0, 0.0);
     public static final PIDGains shootGains = new PIDGains(0.0, 0.0, 0.0);
     public static final Transform3d robotToTurret = Transform3d.kZero;
   }
 
-  // Vision Constants
   public static final class VisionConstants {
     public static final boolean enableLimelightRewind = true;
     public static final List<CameraConfig> cameras = new ArrayList<>();
@@ -119,7 +120,6 @@ public class RobotConfig {
     public static final Distance multitagTagDistanceThreshold = Meters.of(3.25);
   }
 
-  // Simulated Robot Constants
   public static final class SimConstants {
     public static final double drivetrainSimLoopPeriod = 0.005; // 5ms
 
@@ -128,14 +128,6 @@ public class RobotConfig {
   }
 
   static {
-    double dx = trackWidthX.in(Meters) / 2.0;
-    double dy = trackWidthY.in(Meters) / 2.0;
-
-    DriveConstants.moduleTranslations[0] = new Translation2d(dx, dy);
-    DriveConstants.moduleTranslations[1] = new Translation2d(dx, -dy);
-    DriveConstants.moduleTranslations[2] = new Translation2d(-dx, dy);
-    DriveConstants.moduleTranslations[3] = new Translation2d(-dx, -dy);
-
     SimConstants.LL4CameraProperties.setCalibration(1280, 800, Rotation2d.fromDegrees(90));
     SimConstants.LL4CameraProperties.setFPS(128);
     SimConstants.LL4CameraProperties.setAvgLatencyMs(5);

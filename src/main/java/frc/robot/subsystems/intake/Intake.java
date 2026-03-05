@@ -4,6 +4,7 @@ import edu.wpi.first.math.util.Units;
 import frc.robot.subsystems.intake.IntakeIO.IntakeIOOutputs;
 import frc.robot.util.StateSubsystem;
 import org.littletonrobotics.junction.Logger;
+import frc.robot.RobotConfig.IntakeConstants;
 
 enum IntakeState {
   IDLE,
@@ -42,13 +43,16 @@ public class Intake extends StateSubsystem<IntakeState> {
   public void applyState() {
     switch (getCurrentState()) {
       case IDLE:
-        break;
-      case RETRACT:
-        outputs.extendMeters = 0.0;
+        outputs.extendMeters = inputs.extendPositionRads / IntakeConstants.extensionRadius;
         outputs.intakeVoltage = 0.0;
         break;
+      case RETRACT:
+        // TODO: run intake slowly while retracting, unstuck balls
+        outputs.extendMeters = IntakeConstants.maxRetractionMeters;
+        outputs.intakeVoltage = 0.5;
+        break;
       case INTAKE:
-        outputs.extendMeters = Units.inchesToMeters(10.5);
+        outputs.extendMeters = IntakeConstants.maxExtensionMeters;
         outputs.intakeVoltage = 4.0;
         break;
     }
