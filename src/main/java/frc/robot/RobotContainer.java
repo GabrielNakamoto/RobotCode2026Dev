@@ -11,33 +11,24 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.RobotConfig.IntakeConstants;
 import frc.robot.RobotConfig.TurretConstants;
 import frc.robot.subsystems.SuperStructure;
-import frc.robot.subsystems.azimuth.Azimuth;
-import frc.robot.subsystems.azimuth.AzimuthIO;
-import frc.robot.subsystems.azimuth.AzimuthIOHardware;
+import frc.robot.subsystems.azimuth.*;
 import frc.robot.subsystems.drive.*;
-import frc.robot.subsystems.hood.Hood;
-import frc.robot.subsystems.hood.HoodIO;
-import frc.robot.subsystems.hood.HoodIOHardware;
-import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.intake.IntakeIO;
-import frc.robot.subsystems.intake.IntakeIOHardware;
-import frc.robot.subsystems.launcher.Launcher;
-import frc.robot.subsystems.launcher.LauncherIO;
-import frc.robot.subsystems.launcher.LauncherIOHardware;
+import frc.robot.subsystems.hood.*;
+import frc.robot.subsystems.intake.*;
+import frc.robot.subsystems.launcher.*;
 import frc.robot.subsystems.spindexer.*;
-import frc.robot.subsystems.vision.*;
 import frc.robot.util.FuelSim;
 import frc.robot.util.PhoenixSync;
 
 public class RobotContainer {
   public final CommandXboxController driveController = new CommandXboxController(0);
   public final Drive drive;
-  public final Spindexer spindexer;
-  public final Intake intake;
-  public final Azimuth azimuth;
-  public final Hood hood;
-  public final Launcher launcher;
-  public final SuperStructure superStructure;
+  public Spindexer spindexer;
+  public Intake intake;
+  public Azimuth azimuth;
+  public Hood hood;
+  public Launcher launcher;
+  public SuperStructure superStructure;
   // public final Vision vision;
   public FuelSim fuelSim = null;
 
@@ -70,6 +61,7 @@ public class RobotContainer {
                     TunerConstants.FrontLeft,
                     TunerConstants.BackRight,
                     TunerConstants.BackLeft));
+
         spindexer =
             new Spindexer(
                 new SpindexerIOHardware(
@@ -94,15 +86,15 @@ public class RobotContainer {
         launcher = new Launcher(new LauncherIO() {});
         break;
     }
-    superStructure = new SuperStructure(spindexer, hood, azimuth, launcher, intake);
+    // superStructure = new SuperStructure(spindexer, hood, azimuth, launcher, intake);
     PhoenixSync.optimizeAll();
 
     configureBindings();
   }
 
   private void configureBindings() {
-    driveController.leftTrigger(0.3).onTrue(superStructure.intake());
-    driveController.rightTrigger(0.3).onTrue(superStructure.shoot());
+    // driveController.leftTrigger(0.3).onTrue(superStructure.intake());
+    // driveController.rightTrigger(0.3).onTrue(superStructure.shoot());
   }
 
   private void configureFuelSim() {

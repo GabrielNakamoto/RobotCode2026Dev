@@ -13,7 +13,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 public class FieldConstants {
-  public static final AprilTagFieldLayout aprilLayout;
+  public static AprilTagFieldLayout aprilLayout;
 
   public static boolean isBlueAlliance() {
     return DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue;
@@ -25,7 +25,7 @@ public class FieldConstants {
           new AprilTagFieldLayout(
               Path.of("src", "main", "deploy", "apriltags", "2026-welded.json"));
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      // throw new RuntimeException(e);
     }
   }
 
@@ -35,8 +35,10 @@ public class FieldConstants {
         && robotX.gt(startingLineLengthX);
   }
 
-  public static final double fieldLength = aprilLayout.getFieldLength();
-  public static final double fieldWidth = aprilLayout.getFieldWidth();
+  // public static final double fieldLength = aprilLayout.getFieldLength();
+  public static final double fieldLength = 0.0;
+  // public static final double fieldWidth = aprilLayout.getFieldWidth();
+  public static final double fieldWidth = 0.0;
 
   // https://firstfrc.blob.core.windows.net/frc2026/Manual/2026GameManual.pdf
   public static final Distance startingLineLengthX = Units.Inches.of(158.6);

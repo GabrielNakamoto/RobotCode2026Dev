@@ -5,8 +5,8 @@ import static edu.wpi.first.units.Units.*;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Mass;
@@ -110,7 +110,12 @@ public class RobotConfig {
     public static final PIDGains hoodGains = new PIDGains(0.0, 0.0, 0.0);
     public static final PIDGains azimuthGains = new PIDGains(0.0, 0.0, 0.0);
     public static final PIDGains shootGains = new PIDGains(0.0, 0.0, 0.0);
-    public static final Transform3d robotToTurret = Transform3d.kZero;
+    public static final Transform3d robotToTurret =
+        new Transform3d(
+            Units.inchesToMeters(6.0),
+            Units.inchesToMeters(6.0),
+            Units.inchesToMeters(12.0),
+            Rotation3d.kZero);
   }
 
   public static final class VisionConstants {

@@ -257,8 +257,8 @@ public class Drive extends StateSubsystem<DriveState> {
   }
 
   private Vector<N3> getInputVector() {
-    double sx = -driveController.getLeftY();
-    double sy = -driveController.getLeftX();
+    double sx = -driveController.getLeftY() + 1e-8;
+    double sy = -driveController.getLeftX() + 1e-8;
     double omega = -driveController.getRightX();
 
     omega = Math.copySign(omega * omega, omega);

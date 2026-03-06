@@ -1,10 +1,9 @@
 package frc.robot.subsystems.intake;
 
-import edu.wpi.first.math.util.Units;
+import frc.robot.RobotConfig.IntakeConstants;
 import frc.robot.subsystems.intake.IntakeIO.IntakeIOOutputs;
 import frc.robot.util.StateSubsystem;
 import org.littletonrobotics.junction.Logger;
-import frc.robot.RobotConfig.IntakeConstants;
 
 enum IntakeState {
   IDLE,
