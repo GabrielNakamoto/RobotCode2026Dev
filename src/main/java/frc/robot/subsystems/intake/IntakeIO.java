@@ -17,7 +17,8 @@ public interface IntakeIO {
 
   public class IntakeIOOutputs {
     public double intakeVoltage = 0.0;
-    public double extendMeters = 0.0;
+    public double extendVoltage = 0.0;
+    // public double extendMeters = 0.0;
   }
 
   public default void updateInputs(IntakeIOInputs inputs) {}

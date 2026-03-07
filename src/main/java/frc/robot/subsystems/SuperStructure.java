@@ -1,10 +1,12 @@
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Radians;
-import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.RobotState;
 import frc.robot.RobotState.TurretState;
 import frc.robot.subsystems.azimuth.Azimuth;
 import frc.robot.subsystems.hood.Hood;
@@ -43,6 +45,10 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
     applyState();
   }
 
+  public Command idle() {
+    return Commands.runOnce(() -> setState(SuperStructureState.IDLE));
+  }
+
   public Command intake() {
     return Commands.runOnce(() -> setState(SuperStructureState.INTAKE));
   }
@@ -54,7 +60,9 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
   @Override
   public void applyState() {
     Logger.recordOutput("SuperStructure/state", getCurrentState());
-    TurretState setpoints = new TurretState(Radians.of(0), Radians.of(0), RadiansPerSecond.of(0));
+    Angle testAzimuth =
+        RobotState.getInstance().getEstimatedPose().getRotation().getMeasure().unaryMinus();
+    TurretState setpoints = new TurretState(testAzimuth, Radians.of(0), RotationsPerSecond.of(25));
     /*TurretState setpoints =
     RobotState.getInstance()
         .getTurretSetpoints(
@@ -66,7 +74,8 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
 
     switch (getCurrentState()) {
       case IDLE:
-        intake.retract();
+        launcher.setSpeed(RotationsPerSecond.of(0.0));
+        intake.stay();
         spindexer.hold();
         break;
       case INTAKE:
@@ -77,6 +86,7 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
         // TODO: Ensure azimuth + hood are within tolerance to shoot
         launcher.setSpeed(setpoints.launchSpeed());
         intake.retract();
+        // TODO: Wait until shooter up to speed before feeding
         spindexer.feed();
         break;
     }

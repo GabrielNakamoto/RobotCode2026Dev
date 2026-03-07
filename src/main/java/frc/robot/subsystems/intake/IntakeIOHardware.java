@@ -1,8 +1,10 @@
 package frc.robot.subsystems.intake;
 
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.PersistMode;
 import com.revrobotics.REVLibError;
 import com.revrobotics.RelativeEncoder;
@@ -12,6 +14,7 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.RobotState;
 import frc.robot.RobotConfig.IntakeConstants;
 import frc.robot.util.PhoenixSync;
 import frc.robot.util.PhoenixSync.TalonFXSignals;
@@ -41,6 +44,7 @@ public class IntakeIOHardware implements IntakeIO {
     var extendConfig = new TalonFXConfiguration();
     extendConfig.ClosedLoopRamps.withVoltageClosedLoopRampPeriod(0.3);
     extendConfig.Feedback.withSensorToMechanismRatio(IntakeConstants.extendGearRatio);
+    extendConfig.MotorOutput.withNeutralMode(NeutralModeValue.Brake);
     extendConfig.withSlot0(IntakeConstants.extendGains.toSlot0Configs());
     extendConfig.CurrentLimits.withStatorCurrentLimit(10);
     extendConfig
@@ -48,7 +52,7 @@ public class IntakeIOHardware implements IntakeIO {
         .withForwardSoftLimitEnable(true)
         .withForwardSoftLimitThreshold(Units.metersToInches(IntakeConstants.maxExtensionMeters))
         .withReverseSoftLimitEnable(true)
-        .withReverseSoftLimitThreshold(0.0);
+        .withReverseSoftLimitThreshold(Units.metersToInches(IntakeConstants.maxRetractionMeters));
     extendMotor.getConfigurator().apply(extendConfig);
     extendMotor.setPosition(0.0);
 
@@ -70,10 +74,20 @@ public class IntakeIOHardware implements IntakeIO {
 
   @Override
   public void applyOutputs(IntakeIOOutputs outputs) {
-    Logger.recordOutput("Intake/extensionSetpoint", outputs.extendMeters);
+    if (RobotState.isDisabled()) {
+      extendMotor
+          .getConfigurator()
+          .apply(new MotorOutputConfigs().withNeutralMode(NeutralModeValue.Coast));
+    } else {
+      extendMotor
+          .getConfigurator()
+          .apply(new MotorOutputConfigs().withNeutralMode(NeutralModeValue.Brake));
+    }
+    // Logger.recordOutput("Intake/extensionSetpoint", outputs.extendMeters);
     Logger.recordOutput("Intake/intakeSetpoint", outputs.intakeVoltage);
 
-    extendMotor.setControl(extendRequest.withPosition(Units.metersToInches(outputs.extendMeters)));
+    // extendMotor.setControl(extendRequest.withPosition(Units.metersToInches(outputs.extendMeters)));
+    extendMotor.setVoltage(outputs.extendVoltage);
     intakeMotor.setVoltage(outputs.intakeVoltage);
   }
 }

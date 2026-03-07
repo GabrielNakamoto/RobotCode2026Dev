@@ -108,7 +108,7 @@ public class RobotConfig {
 
     // TODO: gains + transform
     public static final PIDGains hoodGains = new PIDGains(0.0, 0.0, 0.0);
-    public static final PIDGains azimuthGains = new PIDGains(0.0, 0.0, 0.0);
+    public static final PIDGains azimuthGains = new PIDGains(100.0, 0.0, 5.0);
     public static final PIDGains shootGains = new PIDGains(0.0, 0.0, 0.0);
     public static final Transform3d robotToTurret =
         new Transform3d(

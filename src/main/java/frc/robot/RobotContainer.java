@@ -93,8 +93,8 @@ public class RobotContainer {
   }
 
   private void configureBindings() {
-    driveController.leftTrigger(0.3).onTrue(superStructure.intake());
-    driveController.rightTrigger(0.3).onTrue(superStructure.shoot());
+    driveController.leftTrigger(0.3).onTrue(superStructure.intake()).onFalse(superStructure.idle());
+    driveController.rightTrigger(0.3).onTrue(superStructure.shoot()).onFalse(superStructure.idle());
   }
 
   private void configureFuelSim() {

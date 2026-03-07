@@ -2,7 +2,7 @@ package frc.robot.subsystems.azimuth;
 
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
+import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
@@ -20,7 +20,8 @@ public class AzimuthIOHardware implements AzimuthIO {
   private final CANcoder encoder;
   private final TalonFXSignals signals;
 
-  private PositionTorqueCurrentFOC request = new PositionTorqueCurrentFOC(0.0);
+  // private PositionTorqueCurrentFOC request = new PositionTorqueCurrentFOC(0.0);
+  private PositionVoltage request = new PositionVoltage(0.0);
 
   public AzimuthIOHardware(int motorId, int encoderId) {
     this.motor = new TalonFX(motorId);
@@ -35,7 +36,7 @@ public class AzimuthIOHardware implements AzimuthIO {
     // Configure motor
     var config = new TalonFXConfiguration();
     config.withSlot0(TurretConstants.azimuthGains.toSlot0Configs());
-    config.CurrentLimits.withStatorCurrentLimit(10);
+    config.CurrentLimits.withStatorCurrentLimit(20);
     config.MotorOutput.withInverted(InvertedValue.CounterClockwise_Positive)
         .withNeutralMode(NeutralModeValue.Brake);
     config.Feedback.withRemoteCANcoder(encoder)
