@@ -44,8 +44,8 @@ public class Spindexer extends StateSubsystem<SpindexerState> {
         outputs.feedMotorVoltageRequested = 0.0;
         break;
       case FEED:
-        outputs.indexMotorVoltageRequested = 3.0;
-        outputs.feedMotorVoltageRequested = 3.0;
+        outputs.indexMotorVoltageRequested = 6.0;
+        outputs.feedMotorVoltageRequested = 6.0;
         break;
     }
   }
