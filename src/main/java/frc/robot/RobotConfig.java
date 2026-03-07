@@ -89,8 +89,8 @@ public class RobotConfig {
     public static final double extendGearRatio = 1.8364;
     public static final PIDGains extendGains = new PIDGains(1.05, 0.0, 0.0);
 
-    public static final double maxExtensionMeters = Units.inchesToMeters(10.9 + 0.25);
-    public static final double maxRetractionMeters = Units.inchesToMeters(6.5);
+    public static final Distance maxExtension = Inches.of(11.15);
+    public static final Distance maxRetraction = Inches.of(6.5);
   }
 
   public static final class TurretConstants {
@@ -115,17 +115,16 @@ public class RobotConfig {
         new Transform3d(
             Units.inchesToMeters(-6.0),
             Units.inchesToMeters(-6.0),
-            Units.inchesToMeters(12.0),
-            Rotation3d.kZero);
+            Units.inchesToMeters(18.667),
+            new Rotation3d(0.0, 0.0, Units.rotationsToRadians(0.391 + 0.3825)));
 
-    // Turret camera mounting constants (relative to turret center)
-    // TODO: Measure and update these values
-    public static final double azimuthRadiusMeters = 0.0; // Distance from turret pivot to camera
-    public static final double cameraXOffsetMeters = 0.0; // Camera X offset from turret center
-    public static final double cameraYOffsetMeters = 0.0; // Camera Y offset from turret center
-    public static final double cameraZOffsetMeters = 0.0; // Camera Z offset from turret center
-    public static final double cameraPitchRadians = 0.0; // Camera pitch angle (tilt up/down)
-    public static final double cameraRollRadians = 0.0; // Camera roll angle
+    public static final Transform3d turretToCamera =
+        new Transform3d(
+            Units.inchesToMeters(-7.0733),
+            Units.inchesToMeters(0),
+            Units.inchesToMeters(0),
+            new Rotation3d(0.0, Units.degreesToRadians(60), 0.0));
+    public static final double azimuthRadiusMeters = Units.inchesToMeters(7.0733);
   }
 
   public static final class VisionConstants {

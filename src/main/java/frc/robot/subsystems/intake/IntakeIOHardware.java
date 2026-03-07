@@ -14,7 +14,6 @@ import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotState;
 import frc.robot.RobotConfig.IntakeConstants;
 import frc.robot.util.PhoenixSync;
@@ -48,9 +47,9 @@ public class IntakeIOHardware implements IntakeIO {
     extendConfig
         .SoftwareLimitSwitch
         .withForwardSoftLimitEnable(true)
-        .withForwardSoftLimitThreshold(Units.metersToInches(IntakeConstants.maxExtensionMeters))
+        .withForwardSoftLimitThreshold(IntakeConstants.maxExtension.in(Inches))
         .withReverseSoftLimitEnable(true)
-        .withReverseSoftLimitThreshold(Units.metersToInches(IntakeConstants.maxRetractionMeters));
+        .withReverseSoftLimitThreshold(IntakeConstants.maxRetraction.in(Inches));
     extendMotor.getConfigurator().apply(extendConfig);
     extendMotor.setPosition(0.0);
 

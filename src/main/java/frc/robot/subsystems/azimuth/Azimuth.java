@@ -36,12 +36,12 @@ public class Azimuth extends SubsystemBase {
     // Camera position relative to turret center, rotated by azimuth
     // The camera orbits around the turret pivot at azimuthRadiusMeters
     double cameraLocalX =
-        TurretConstants.cameraXOffsetMeters
+        TurretConstants.turretToCamera.getX()
             + TurretConstants.azimuthRadiusMeters * Math.cos(azimuthRadians);
     double cameraLocalY =
-        TurretConstants.cameraYOffsetMeters
+        TurretConstants.turretToCamera.getY()
             + TurretConstants.azimuthRadiusMeters * Math.sin(azimuthRadians);
-    double cameraLocalZ = TurretConstants.cameraZOffsetMeters;
+    double cameraLocalZ = TurretConstants.turretToCamera.getZ();
 
     // Final camera position in robot space
     double cameraX =
@@ -53,7 +53,9 @@ public class Azimuth extends SubsystemBase {
     // Camera rotation: azimuth yaw + fixed pitch/roll offsets
     Rotation3d cameraRotation =
         new Rotation3d(
-            TurretConstants.cameraRollRadians, TurretConstants.cameraPitchRadians, azimuthRadians);
+            TurretConstants.turretToCamera.getRotation().getX(),
+            TurretConstants.turretToCamera.getRotation().getY(),
+            azimuthRadians);
 
     return new Pose3d(cameraX, cameraY, cameraZ, cameraRotation);
   }
