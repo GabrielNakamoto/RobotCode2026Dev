@@ -83,6 +83,7 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
         spindexer.hold();
         break;
       case SHOOT:
+        // TODO: move intake back and forth + faster spin to unstick balls
         intake.retract();
         if (azimuth.getAngle().isNear(turretParams.azimuthAngle(), TurretConstants.azimuthTolerance)
             && hood.getAngle().isNear(turretParams.hoodAngle(), TurretConstants.hoodTolerance)) {

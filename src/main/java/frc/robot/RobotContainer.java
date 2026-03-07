@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.RobotConfig.IntakeConstants;
 import frc.robot.RobotConfig.TurretConstants;
+import frc.robot.RobotConfig.VisionConstants;
 import frc.robot.RobotState.TurretState;
 import frc.robot.subsystems.SuperStructure;
 import frc.robot.subsystems.azimuth.*;
@@ -18,20 +19,24 @@ import frc.robot.subsystems.hood.*;
 import frc.robot.subsystems.intake.*;
 import frc.robot.subsystems.launcher.*;
 import frc.robot.subsystems.spindexer.*;
+import frc.robot.subsystems.vision.Vision;
+import frc.robot.subsystems.vision.VisionIO;
+import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.util.FuelSim;
 import frc.robot.util.PhoenixSync;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 public class RobotContainer {
   public final CommandXboxController driveController = new CommandXboxController(0);
   public final Drive drive;
-  public Spindexer spindexer;
-  public Intake intake;
-  public Azimuth azimuth;
-  public Hood hood;
-  public Launcher launcher;
-  public SuperStructure superStructure;
-  // public final Vision vision;
+  public final Spindexer spindexer;
+  public final Intake intake;
+  public final Azimuth azimuth;
+  public final Hood hood;
+  public final Launcher launcher;
+  public final SuperStructure superStructure;
+  public final Vision vision;
   public FuelSim fuelSim = null;
 
   public RobotContainer() {
@@ -51,6 +56,7 @@ public class RobotContainer {
         azimuth = new Azimuth(new AzimuthIO() {});
         hood = new Hood(new HoodIO() {});
         launcher = new Launcher(new LauncherIO() {});
+        vision = new Vision(new VisionIO() {});
         configureFuelSim();
         break;
       case REAL:
@@ -78,8 +84,15 @@ public class RobotContainer {
                     TurretConstants.azimuthMotorId, TurretConstants.azimuthEncoderId));
         hood = new Hood(new HoodIOHardware(TurretConstants.hoodMotorId));
         launcher = new Launcher(new LauncherIOHardware(TurretConstants.launcherMotorId));
+        vision = new Vision(new VisionIO() {});
+				/*
+        vision =
+            new Vision(
+                new VisionIOLimelight(
+                    VisionConstants.turretCameraConfig, Optional.of(azimuth::getTurretCameraPose)));*/
         break;
       default:
+        vision = new Vision(new VisionIO() {});
         drive = new Drive(driveController, new DriveIO() {});
         spindexer = new Spindexer(new SpindexerIO() {});
         intake = new Intake(new IntakeIO() {});

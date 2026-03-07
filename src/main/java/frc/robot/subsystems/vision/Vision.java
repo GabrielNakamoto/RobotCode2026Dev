@@ -92,7 +92,7 @@ public class Vision extends SubsystemBase {
     return true;
   }
 
-	// LERP Hub confidence
+  // LERP Hub confidence
   private double calculateHubConfidence(double distance) {
     return Math.max(0.0, 1.0 - (distance / VisionConstants.hubRelativeMaxDistance));
   }

@@ -1,7 +1,12 @@
 package frc.robot.subsystems.azimuth;
 
+import static edu.wpi.first.units.Units.*;
+
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.RobotConfig.TurretConstants;
 import org.littletonrobotics.junction.Logger;
 
 public class Azimuth extends SubsystemBase {
@@ -20,9 +25,43 @@ public class Azimuth extends SubsystemBase {
     this.io.setAngle(angle);
   }
 
+  public Pose3d getTurretCameraPose() {
+    double azimuthRadians = inputs.position.in(Radians);
+
+    // Get turret center position in robot space
+    double turretX = TurretConstants.robotToTurret.getX();
+    double turretY = TurretConstants.robotToTurret.getY();
+    double turretZ = TurretConstants.robotToTurret.getZ();
+
+    // Camera position relative to turret center, rotated by azimuth
+    // The camera orbits around the turret pivot at azimuthRadiusMeters
+    double cameraLocalX =
+        TurretConstants.cameraXOffsetMeters
+            + TurretConstants.azimuthRadiusMeters * Math.cos(azimuthRadians);
+    double cameraLocalY =
+        TurretConstants.cameraYOffsetMeters
+            + TurretConstants.azimuthRadiusMeters * Math.sin(azimuthRadians);
+    double cameraLocalZ = TurretConstants.cameraZOffsetMeters;
+
+    // Final camera position in robot space
+    double cameraX =
+        turretX + cameraLocalX * Math.cos(azimuthRadians) - cameraLocalY * Math.sin(azimuthRadians);
+    double cameraY =
+        turretY + cameraLocalX * Math.sin(azimuthRadians) + cameraLocalY * Math.cos(azimuthRadians);
+    double cameraZ = turretZ + cameraLocalZ;
+
+    // Camera rotation: azimuth yaw + fixed pitch/roll offsets
+    Rotation3d cameraRotation =
+        new Rotation3d(
+            TurretConstants.cameraRollRadians, TurretConstants.cameraPitchRadians, azimuthRadians);
+
+    return new Pose3d(cameraX, cameraY, cameraZ, cameraRotation);
+  }
+
   @Override
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Azimuth", inputs);
+    Logger.recordOutput("Azimuth/TurretCameraPose", getTurretCameraPose());
   }
 }

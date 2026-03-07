@@ -117,9 +117,21 @@ public class RobotConfig {
             Units.inchesToMeters(-6.0),
             Units.inchesToMeters(12.0),
             Rotation3d.kZero);
+
+    // Turret camera mounting constants (relative to turret center)
+    // TODO: Measure and update these values
+    public static final double azimuthRadiusMeters = 0.0; // Distance from turret pivot to camera
+    public static final double cameraXOffsetMeters = 0.0; // Camera X offset from turret center
+    public static final double cameraYOffsetMeters = 0.0; // Camera Y offset from turret center
+    public static final double cameraZOffsetMeters = 0.0; // Camera Z offset from turret center
+    public static final double cameraPitchRadians = 0.0; // Camera pitch angle (tilt up/down)
+    public static final double cameraRollRadians = 0.0; // Camera roll angle
   }
 
   public static final class VisionConstants {
+    public static final CameraConfig turretCameraConfig =
+        new CameraConfig("turret", Transform3d.kZero);
+
     // Hub detection tags (blue: 9,10 | red: 25,26)
     public static final List<Integer> hubTags = List.of(9, 10, 25, 26);
     public static final boolean rewindEnabled = false;
