@@ -26,6 +26,10 @@ public class PhoenixSync {
       return BaseStatusSignal.getLatencyCompensatedValueAsDouble(position, velocity);
     }
 
+    public AngularVelocity getVelocity() {
+      return BaseStatusSignal.getLatencyCompensatedValue(velocity, acceleration);
+    }
+
     public double getVelocityRadsPerSec() {
       return BaseStatusSignal.getLatencyCompensatedValueAsDouble(velocity, acceleration);
     }

@@ -1,12 +1,9 @@
 package frc.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
-import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.RobotState;
 import frc.robot.RobotState.TurretState;
 import frc.robot.subsystems.azimuth.Azimuth;
 import frc.robot.subsystems.hood.Hood;
@@ -14,6 +11,7 @@ import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.launcher.Launcher;
 import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.util.StateSubsystem;
+import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 
 enum SuperStructureState {
@@ -28,9 +26,16 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
   private final Azimuth azimuth;
   private final Launcher launcher;
   private final Intake intake;
+  private final Supplier<TurretState> setpoints;
 
   public SuperStructure(
-      Spindexer spindexer, Hood hood, Azimuth azimuth, Launcher launcher, Intake intake) {
+      Supplier<TurretState> setpoints,
+      Spindexer spindexer,
+      Hood hood,
+      Azimuth azimuth,
+      Launcher launcher,
+      Intake intake) {
+    this.setpoints = setpoints;
     this.spindexer = spindexer;
     this.hood = hood;
     this.azimuth = azimuth;
@@ -60,17 +65,11 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
   @Override
   public void applyState() {
     Logger.recordOutput("SuperStructure/state", getCurrentState());
-    Angle testAzimuth =
-        RobotState.getInstance().getEstimatedPose().getRotation().getMeasure().unaryMinus();
-    TurretState setpoints = new TurretState(testAzimuth, Radians.of(0), RotationsPerSecond.of(25));
-    /*TurretState setpoints =
-    RobotState.getInstance()
-        .getTurretSetpoints(
-            new TurretState(azimuth.getAngle(), hood.getAngle(), launcher.getSpeed()));*/
+    TurretState turretParams = setpoints.get();
 
     // Always track hub
-    azimuth.setAngle(setpoints.azimuthAngle());
-    hood.setAngle(setpoints.hoodAngle());
+    azimuth.setAngle(turretParams.azimuthAngle());
+    hood.setAngle(turretParams.hoodAngle());
 
     switch (getCurrentState()) {
       case IDLE:
@@ -84,10 +83,12 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
         break;
       case SHOOT:
         // TODO: Ensure azimuth + hood are within tolerance to shoot
-        launcher.setSpeed(setpoints.launchSpeed());
+        launcher.setSpeed(turretParams.launchSpeed());
         intake.retract();
         // TODO: Wait until shooter up to speed before feeding
-        spindexer.feed();
+        if (launcher.getSpeed().gt(RotationsPerSecond.of(15))) {
+          spindexer.feed();
+        }
         break;
     }
   }

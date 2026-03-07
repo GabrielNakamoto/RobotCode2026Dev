@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.RobotConfig.IntakeConstants;
 import frc.robot.RobotConfig.TurretConstants;
+import frc.robot.RobotState.TurretState;
 import frc.robot.subsystems.SuperStructure;
 import frc.robot.subsystems.azimuth.*;
 import frc.robot.subsystems.drive.*;
@@ -19,6 +20,7 @@ import frc.robot.subsystems.launcher.*;
 import frc.robot.subsystems.spindexer.*;
 import frc.robot.util.FuelSim;
 import frc.robot.util.PhoenixSync;
+import java.util.function.Supplier;
 
 public class RobotContainer {
   public final CommandXboxController driveController = new CommandXboxController(0);
@@ -86,14 +88,22 @@ public class RobotContainer {
         launcher = new Launcher(new LauncherIO() {});
         break;
     }
-    superStructure = new SuperStructure(spindexer, hood, azimuth, launcher, intake);
+    Supplier<TurretState> testSetpoints =
+        () -> {
+          double testHood = Math.max(-1.0, driveController.getLeftTriggerAxis() * 0.107);
+          return new TurretState(
+              RobotState.getInstance().getEstimatedPose().getRotation().getMeasure().unaryMinus(),
+              Units.Rotations.of(testHood),
+              Units.RotationsPerSecond.of(25.0));
+        };
+    superStructure = new SuperStructure(testSetpoints, spindexer, hood, azimuth, launcher, intake);
     PhoenixSync.optimizeAll();
 
     configureBindings();
   }
 
   private void configureBindings() {
-    driveController.leftTrigger(0.3).onTrue(superStructure.intake()).onFalse(superStructure.idle());
+    driveController.leftBumper().onTrue(superStructure.intake()).onFalse(superStructure.idle());
     driveController.rightTrigger(0.3).onTrue(superStructure.shoot()).onFalse(superStructure.idle());
   }
 
