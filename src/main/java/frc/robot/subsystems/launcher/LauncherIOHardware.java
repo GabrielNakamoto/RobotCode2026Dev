@@ -24,7 +24,7 @@ public class LauncherIOHardware implements LauncherIO {
     var config = new TalonFXConfiguration();
     config.withSlot0(TurretConstants.shootGains.toSlot0Configs());
     config.Feedback.withSensorToMechanismRatio(TurretConstants.launcherGearRatio);
-    config.CurrentLimits.withStatorCurrentLimit(20);
+    config.CurrentLimits.withStatorCurrentLimit(10);
     config.MotorOutput.withInverted(InvertedValue.Clockwise_Positive)
         .withNeutralMode(NeutralModeValue.Brake);
 

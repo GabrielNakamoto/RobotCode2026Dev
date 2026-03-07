@@ -1,5 +1,6 @@
 package frc.robot.subsystems.intake;
 
+import edu.wpi.first.math.util.Units;
 import frc.robot.RobotConfig.IntakeConstants;
 import frc.robot.subsystems.intake.IntakeIO.IntakeIOOutputs;
 import frc.robot.util.StateSubsystem;
@@ -14,7 +15,7 @@ enum IntakeState {
 public class Intake extends StateSubsystem<IntakeState> {
   private final IntakeIO io;
   private IntakeIOInputsAutoLogged inputs = new IntakeIOInputsAutoLogged();
-  private IntakeIOOutputs outputs;
+  private IntakeIOOutputs outputs = new IntakeIOOutputs();
 
   public Intake(IntakeIO io) {
     this.io = io;
@@ -42,17 +43,21 @@ public class Intake extends StateSubsystem<IntakeState> {
   public void applyState() {
     switch (getCurrentState()) {
       case IDLE:
-        outputs.extendMeters = inputs.extendPositionRads / IntakeConstants.extensionRadius;
+        outputs.extendMeters = Units.inchesToMeters(inputs.extendPositionInches);
         outputs.intakeVoltage = 0.0;
         break;
       case RETRACT:
         // TODO: run intake slowly while retracting, unstuck balls
         outputs.extendMeters = IntakeConstants.maxRetractionMeters;
-        outputs.intakeVoltage = 0.5;
+        outputs.intakeVoltage = 1.5;
         break;
       case INTAKE:
         outputs.extendMeters = IntakeConstants.maxExtensionMeters;
-        outputs.intakeVoltage = 4.0;
+        if (inputs.extendPositionInches > 5.5) {
+          outputs.intakeVoltage = 8.0;
+        } else {
+          outputs.intakeVoltage = 0.0;
+        }
         break;
     }
   }

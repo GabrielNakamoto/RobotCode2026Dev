@@ -6,7 +6,7 @@ public interface IntakeIO {
   @AutoLog
   public class IntakeIOInputs {
     public boolean extendConnected = false;
-    public double extendPositionRads = 0.0;
+    public double extendPositionInches = 0.0;
     public double extendVoltageApplied = 0.0;
     public double extendVelocityRadsPerSec = 0.0;
 

@@ -1,7 +1,7 @@
 package frc.robot.subsystems.intake;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
+import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.revrobotics.PersistMode;
 import com.revrobotics.REVLibError;
@@ -24,7 +24,8 @@ public class IntakeIOHardware implements IntakeIO {
   private final SparkFlex intakeMotor;
   private final RelativeEncoder intakeEncoder;
 
-  private PositionTorqueCurrentFOC extendRequest = new PositionTorqueCurrentFOC(0.0);
+  // private PositionTorqueCurrentFOC extendRequest = new PositionTorqueCurrentFOC(0.0);
+  private PositionVoltage extendRequest = new PositionVoltage(0.0);
 
   public IntakeIOHardware(int extendId, int intakeId) {
     this.extendMotor = new TalonFX(extendId);
@@ -32,21 +33,24 @@ public class IntakeIOHardware implements IntakeIO {
     intakeEncoder = intakeMotor.getEncoder();
 
     var intakeConfig = new SparkFlexConfig();
-    intakeConfig.idleMode(IdleMode.kBrake).inverted(true).smartCurrentLimit(60);
+    intakeConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(40);
     intakeConfig.encoder.positionConversionFactor(IntakeConstants.intakeGearRatio);
     intakeMotor.configure(
         intakeConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
 
     var extendConfig = new TalonFXConfiguration();
+    extendConfig.ClosedLoopRamps.withVoltageClosedLoopRampPeriod(0.3);
     extendConfig.Feedback.withSensorToMechanismRatio(IntakeConstants.extendGearRatio);
     extendConfig.withSlot0(IntakeConstants.extendGains.toSlot0Configs());
-    extendMotor.getConfigurator().apply(extendConfig);
+    extendConfig.CurrentLimits.withStatorCurrentLimit(10);
     extendConfig
         .SoftwareLimitSwitch
         .withForwardSoftLimitEnable(true)
-        .withForwardSoftLimitThreshold(0.0)
+        .withForwardSoftLimitThreshold(Units.metersToInches(IntakeConstants.maxExtensionMeters))
         .withReverseSoftLimitEnable(true)
         .withReverseSoftLimitThreshold(0.0);
+    extendMotor.getConfigurator().apply(extendConfig);
+    extendMotor.setPosition(0.0);
 
     extendSignals = PhoenixSync.registerTalonFX(extendMotor, 50);
   }
@@ -54,7 +58,7 @@ public class IntakeIOHardware implements IntakeIO {
   @Override
   public void updateInputs(IntakeIOInputs inputs) {
     inputs.extendConnected = extendSignals.isConnected();
-    inputs.extendPositionRads = extendSignals.getPositionRads();
+    inputs.extendPositionInches = extendSignals.getPositionRads();
     inputs.extendVelocityRadsPerSec = extendSignals.getVelocityRadsPerSec();
     inputs.extendVoltageApplied = extendSignals.getVoltage();
 
@@ -69,8 +73,7 @@ public class IntakeIOHardware implements IntakeIO {
     Logger.recordOutput("Intake/extensionSetpoint", outputs.extendMeters);
     Logger.recordOutput("Intake/intakeSetpoint", outputs.intakeVoltage);
 
-    double extendRadians = outputs.extendMeters / IntakeConstants.extensionRadius;
-    extendMotor.setControl(extendRequest.withPosition(extendRadians));
+    extendMotor.setControl(extendRequest.withPosition(Units.metersToInches(outputs.extendMeters)));
     intakeMotor.setVoltage(outputs.intakeVoltage);
   }
 }

@@ -86,15 +86,15 @@ public class RobotContainer {
         launcher = new Launcher(new LauncherIO() {});
         break;
     }
-    // superStructure = new SuperStructure(spindexer, hood, azimuth, launcher, intake);
+    superStructure = new SuperStructure(spindexer, hood, azimuth, launcher, intake);
     PhoenixSync.optimizeAll();
 
     configureBindings();
   }
 
   private void configureBindings() {
-    // driveController.leftTrigger(0.3).onTrue(superStructure.intake());
-    // driveController.rightTrigger(0.3).onTrue(superStructure.shoot());
+    driveController.leftTrigger(0.3).onTrue(superStructure.intake());
+    driveController.rightTrigger(0.3).onTrue(superStructure.shoot());
   }
 
   private void configureFuelSim() {

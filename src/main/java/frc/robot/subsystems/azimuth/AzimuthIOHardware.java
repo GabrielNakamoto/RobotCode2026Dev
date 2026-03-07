@@ -29,23 +29,23 @@ public class AzimuthIOHardware implements AzimuthIO {
     // Configure CANcoder
     var encoderConfig = new CANcoderConfiguration();
     encoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;
-    encoderConfig.MagnetSensor.withMagnetOffset(0.0);
+    encoderConfig.MagnetSensor.withMagnetOffset(0.391);
     encoder.getConfigurator().apply(encoderConfig);
 
     // Configure motor
     var config = new TalonFXConfiguration();
     config.withSlot0(TurretConstants.azimuthGains.toSlot0Configs());
-    config.CurrentLimits.withStatorCurrentLimit(60);
-    config.MotorOutput.withInverted(InvertedValue.Clockwise_Positive)
+    config.CurrentLimits.withStatorCurrentLimit(10);
+    config.MotorOutput.withInverted(InvertedValue.CounterClockwise_Positive)
         .withNeutralMode(NeutralModeValue.Brake);
     config.Feedback.withRemoteCANcoder(encoder)
         .withFeedbackSensorSource(FeedbackSensorSourceValue.FusedCANcoder)
         .withSensorToMechanismRatio(1.0)
         .withRotorToSensorRatio(TurretConstants.azimuthGearRatio);
-    config.SoftwareLimitSwitch.withForwardSoftLimitThreshold(0.0)
+    config.SoftwareLimitSwitch.withForwardSoftLimitEnable(true)
+        .withForwardSoftLimitThreshold(-0.8825 + 1.0)
         .withReverseSoftLimitEnable(true)
-        .withForwardSoftLimitThreshold(0.0);
-
+        .withReverseSoftLimitThreshold(-0.8825);
     motor.getConfigurator().apply(config);
 
     this.signals = PhoenixSync.registerTalonFX(motor, 150);

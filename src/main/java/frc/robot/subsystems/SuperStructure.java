@@ -12,6 +12,7 @@ import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.launcher.Launcher;
 import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.util.StateSubsystem;
+import org.littletonrobotics.junction.Logger;
 
 enum SuperStructureState {
   IDLE,
@@ -52,6 +53,7 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
 
   @Override
   public void applyState() {
+    Logger.recordOutput("SuperStructure/state", getCurrentState());
     TurretState setpoints = new TurretState(Radians.of(0), Radians.of(0), RadiansPerSecond.of(0));
     /*TurretState setpoints =
     RobotState.getInstance()

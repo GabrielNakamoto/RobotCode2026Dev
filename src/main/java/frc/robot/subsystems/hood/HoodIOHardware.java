@@ -23,15 +23,17 @@ public class HoodIOHardware implements HoodIO {
     // Configure motor
     var config = new TalonFXConfiguration();
     config.withSlot0(TurretConstants.hoodGains.toSlot0Configs());
-    config.MotorOutput.withInverted(InvertedValue.Clockwise_Positive)
+    config.MotorOutput.withInverted(InvertedValue.CounterClockwise_Positive)
         .withNeutralMode(NeutralModeValue.Brake);
-    config.CurrentLimits.withStatorCurrentLimit(20);
+    config.Feedback.withSensorToMechanismRatio(TurretConstants.hoodGearRatio);
+    config.CurrentLimits.withStatorCurrentLimit(10);
     config.SoftwareLimitSwitch.withForwardSoftLimitEnable(true)
-        .withForwardSoftLimitThreshold(0.0)
+        .withForwardSoftLimitThreshold(0.107)
         .withReverseSoftLimitEnable(true)
         .withForwardSoftLimitThreshold(0.0);
 
     motor.getConfigurator().apply(config);
+    motor.setPosition(0.0);
 
     this.signals = PhoenixSync.registerTalonFX(motor, 150);
   }

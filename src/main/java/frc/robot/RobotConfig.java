@@ -90,10 +90,10 @@ public class RobotConfig {
     public static final double extensionRadius = Units.inchesToMeters(0.7);
     public static final double intakeGearRatio = 1.8667;
     public static final double extendGearRatio = 1.8364;
-    public static final PIDGains extendGains = new PIDGains(0.0, 0.0, 0.0);
+    public static final PIDGains extendGains = new PIDGains(1.05, 0.0, 0.0);
 
-    public static final double maxExtensionMeters = Units.inchesToMeters(10.5);
-    public static final double maxRetractionMeters = Units.inchesToMeters(1.5);
+    public static final double maxExtensionMeters = Units.inchesToMeters(10.9 + 0.25);
+    public static final double maxRetractionMeters = Units.inchesToMeters(6.5);
   }
 
   public static final class TurretConstants {
