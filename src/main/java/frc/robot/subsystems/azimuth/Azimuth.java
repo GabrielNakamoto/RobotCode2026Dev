@@ -22,16 +22,12 @@ public class Azimuth extends SubsystemBase {
     this.io = io;
   }
 
-  public static Angle adjustAngle(Angle angle) {
-    return angle.minus(TurretConstants.robotToTurret.getRotation().getMeasureZ());
-  }
-
   public Angle getAngle() {
-    return adjustAngle(inputs.position);
+    return inputs.position.plus(TurretConstants.robotToTurret.getRotation().getMeasureZ());
   }
 
   public void setAngle(Angle robotAngle) {
-    this.io.setAngle(adjustAngle(robotAngle));
+    this.io.setAngle(robotAngle.minus(TurretConstants.robotToTurret.getRotation().getMeasureZ()));
   }
 
   public Pose3d getTurretCameraPose() {
