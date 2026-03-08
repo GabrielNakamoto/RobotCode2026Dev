@@ -44,7 +44,7 @@ public class Vision extends SubsystemBase {
       var state = inputs[i];
       if (!state.isConnected) continue;
 
-      // === Global Pose Processing ===
+      // Global Pose Processing
       if (shouldAcceptMeasurement(state)) {
         Vector<N3> stdDevVec =
             VecBuilder.fill(
@@ -58,7 +58,7 @@ public class Vision extends SubsystemBase {
         rejectedMeasurements++;
       }
 
-      // === Hub-Relative Processing for Turret Aiming ===
+      // Hub-Relative Processing for Turret Aiming
       if (state.hubInSight && !state.robotToHub.equals(Pose3d.kZero)) {
         double distance = state.robotToHub.getTranslation().getNorm();
         double confidence = calculateHubConfidence(distance);

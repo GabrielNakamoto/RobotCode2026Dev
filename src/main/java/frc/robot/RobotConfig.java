@@ -109,27 +109,30 @@ public class RobotConfig {
 
     public static final Angle azimuthTolerance = Degrees.of(1.5);
     public static final Angle hoodTolerance = Degrees.of(0.5);
-    public static final AngularVelocity shooterWarmupThreshold = RotationsPerSecond.of(25);
+    public static final AngularVelocity shooterTolerance = RotationsPerSecond.of(0.5);
 
     public static final Transform3d robotToTurret =
         new Transform3d(
             Units.inchesToMeters(-6.0),
             Units.inchesToMeters(-6.0),
             Units.inchesToMeters(18.667),
-            new Rotation3d(0.0, 0.0, Units.rotationsToRadians(0.391 + 0.3825)));
+            new Rotation3d(0.0, 0.0, Math.PI));
 
     public static final Transform3d turretToCamera =
         new Transform3d(
             Units.inchesToMeters(-7.0733),
             Units.inchesToMeters(0),
             Units.inchesToMeters(0),
-            new Rotation3d(0.0, Units.degreesToRadians(60), 0.0));
+            new Rotation3d(0.0, Units.degreesToRadians(30), 0.0));
+
+    public static final Angle turretCameraMagicOffset = Rotations.of(0.125);
     public static final double azimuthRadiusMeters = Units.inchesToMeters(7.0733);
   }
 
   public static final class VisionConstants {
     public static final CameraConfig turretCameraConfig =
-        new CameraConfig("turret", Transform3d.kZero);
+        new CameraConfig(
+            "limelight-turret", TurretConstants.robotToTurret.plus(TurretConstants.turretToCamera));
 
     // Hub detection tags (blue: 9,10 | red: 25,26)
     public static final List<Integer> hubTags = List.of(9, 10, 25, 26);

@@ -1,15 +1,18 @@
 package frc.robot;
 
+import static edu.wpi.first.units.Units.*;
+
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.units.Units;
+import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.Filesystem;
 import frc.robot.util.AllianceFlip;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.List;
 
 public class FieldConstants {
@@ -23,9 +26,9 @@ public class FieldConstants {
     try {
       aprilLayout =
           new AprilTagFieldLayout(
-              Path.of("src", "main", "deploy", "apriltags", "2026-welded.json"));
+              Filesystem.getDeployDirectory().toPath().resolve("apriltags/2026-welded.json"));
     } catch (IOException e) {
-      // throw new RuntimeException(e);
+      throw new RuntimeException(e);
     }
   }
 
@@ -35,31 +38,35 @@ public class FieldConstants {
         && robotX.gt(startingLineLengthX);
   }
 
-  // public static final double fieldLength = aprilLayout.getFieldLength();
-  public static final double fieldLength = 0.0;
-  // public static final double fieldWidth = aprilLayout.getFieldWidth();
-  public static final double fieldWidth = 0.0;
+  public static final double fieldLength = aprilLayout.getFieldLength();
+  public static final double fieldWidth = aprilLayout.getFieldWidth();
 
   // https://firstfrc.blob.core.windows.net/frc2026/Manual/2026GameManual.pdf
-  public static final Distance startingLineLengthX = Units.Inches.of(158.6);
-  public static final Distance neutralZoneLengthX = Units.Inches.of(283);
+  public static final Distance startingLineLengthX = Inches.of(158.6);
+  public static final Distance neutralZoneLengthX = Inches.of(283);
 
-  public static final Distance trenchLengthX = Units.Inches.of(65.65);
-  public static final Distance trenchWidthY = Units.Inches.of(47.0);
+  public static final Distance trenchLengthX = Inches.of(65.65);
+  public static final Distance trenchWidthY = Inches.of(47.0);
   public static final Distance trenchCenter = trenchWidthY.div(2.0);
 
-  // Hub center points calculated from April tag positions
-  // Blue hub: tags 9 & 10 at x≈12.519m, y≈3.679m and y≈4.035m
-  // Red hub: tags 25 & 26 at x≈4.022m, y≈4.390m and y≈4.035m
-  private static final Pose2d blueHubCenter =
-      new Pose2d(12.519, (3.679 + 4.035) / 2.0, Rotation2d.kZero);
+  public static class Hub {
+    public static final double width = Units.inchesToMeters(47.0);
+    public static final double height =
+        Units.inchesToMeters(72.0); // includes the catcher at the top
+    public static final double innerWidth = Units.inchesToMeters(41.7);
+    public static final double innerHeight = Units.inchesToMeters(56.5);
 
-  public static Pose2d getHubCenter() {
-    return AllianceFlip.apply(blueHubCenter);
+    public static final Translation3d topCenterPoint =
+        new Translation3d(
+            aprilLayout.getTagPose(26).get().getX() + width / 2.0, fieldWidth / 2.0, height);
+    public static final Translation3d innerCenterPoint =
+        new Translation3d(
+            aprilLayout.getTagPose(26).get().getX() + width / 2.0, fieldWidth / 2.0, innerHeight);
+
+    public static Pose2d getTopCenter() {
+      return AllianceFlip.apply(new Pose2d(topCenterPoint.toTranslation2d(), Rotation2d.kZero));
+    }
   }
-
-  @Deprecated // Use getHubCenter() for alliance-aware hub position
-  public static final Pose2d hubCenterPoint = blueHubCenter;
 
   public static final List<Pose2d> trenchPoses;
 
@@ -68,9 +75,7 @@ public class FieldConstants {
         List.of(
             new Pose2d(startingLineLengthX, trenchCenter, Rotation2d.kZero),
             new Pose2d(
-                startingLineLengthX,
-                Units.Meters.of(fieldWidth).minus(trenchCenter),
-                Rotation2d.kZero));
+                startingLineLengthX, Meters.of(fieldWidth).minus(trenchCenter), Rotation2d.kZero));
     trenchPoses = blueTrenchPoses.stream().map(AllianceFlip::apply).toList();
   }
 }

@@ -26,6 +26,7 @@ import frc.robot.subsystems.drive.DriveIOInputsAutoLogged;
 import java.util.Optional;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
+import org.littletonrobotics.junction.AutoLogOutputManager;
 import org.littletonrobotics.junction.Logger;
 
 public class RobotState {
@@ -51,6 +52,10 @@ public class RobotState {
   private HubObservation latestHubObservation = null;
 
   private static RobotState instance;
+
+  private RobotState() {
+    AutoLogOutputManager.addObject(this);
+  }
 
   public static RobotState getInstance() {
     if (instance == null) {
@@ -171,7 +176,7 @@ public class RobotState {
   }
 
   private Translation2d calculateBlendedHubTarget(Pose2d robotPose) {
-    Translation2d globalHubTarget = FieldConstants.getHubCenter().getTranslation();
+    Translation2d globalHubTarget = FieldConstants.Hub.getTopCenter().getTranslation();
 
     Optional<HubObservation> hubObs = getLatestHubObservation();
     if (hubObs.isEmpty()) {

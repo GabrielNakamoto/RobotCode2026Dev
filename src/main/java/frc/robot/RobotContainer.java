@@ -4,7 +4,11 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.units.Units;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -24,7 +28,6 @@ import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.util.FuelSim;
 import frc.robot.util.PhoenixSync;
-
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -85,7 +88,6 @@ public class RobotContainer {
                     TurretConstants.azimuthMotorId, TurretConstants.azimuthEncoderId));
         hood = new Hood(new HoodIOHardware(TurretConstants.hoodMotorId));
         launcher = new Launcher(new LauncherIOHardware(TurretConstants.launcherMotorId));
-        // vision = new Vision(new VisionIO() {});
         vision =
             new Vision(
                 new VisionIOLimelight(
@@ -103,9 +105,21 @@ public class RobotContainer {
     }
     Supplier<TurretState> testSetpoints =
         () -> {
-          double testHood = Math.max(-1.0, driveController.getLeftTriggerAxis() * 0.107);
+          double testHood = driveController.getLeftTriggerAxis() * 0.107;
+
+          Pose2d robotPose = RobotState.getInstance().getEstimatedPose();
+          Translation2d tagPosition =
+              FieldConstants.aprilLayout.getTagPose(10).get().getTranslation().toTranslation2d();
+          Rotation2d fieldAngleToTag = tagPosition.minus(robotPose.getTranslation()).getAngle();
+          Rotation2d robotRelativeAngle = fieldAngleToTag.minus(robotPose.getRotation());
+
+          Angle turretToTag =
+              robotRelativeAngle
+                  .getMeasure()
+                  .minus(TurretConstants.robotToTurret.getRotation().toRotation2d().getMeasure());
+
           return new TurretState(
-              RobotState.getInstance().getEstimatedPose().getRotation().getMeasure().unaryMinus(),
+              TurretConstants.turretCameraMagicOffset,
               Units.Rotations.of(testHood),
               Units.RotationsPerSecond.of(25.0));
         };

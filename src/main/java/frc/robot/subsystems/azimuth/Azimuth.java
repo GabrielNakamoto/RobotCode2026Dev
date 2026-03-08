@@ -4,9 +4,11 @@ import static edu.wpi.first.units.Units.*;
 
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotConfig.TurretConstants;
+import frc.robot.RobotState;
 import org.littletonrobotics.junction.Logger;
 
 public class Azimuth extends SubsystemBase {
@@ -55,7 +57,7 @@ public class Azimuth extends SubsystemBase {
         new Rotation3d(
             TurretConstants.turretToCamera.getRotation().getX(),
             TurretConstants.turretToCamera.getRotation().getY(),
-            azimuthRadians);
+            azimuthRadians + TurretConstants.turretCameraMagicOffset.in(Radians));
 
     return new Pose3d(cameraX, cameraY, cameraZ, cameraRotation);
   }
@@ -64,6 +66,10 @@ public class Azimuth extends SubsystemBase {
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Azimuth", inputs);
-    Logger.recordOutput("Azimuth/TurretCameraPose", getTurretCameraPose());
+    var pose = getTurretCameraPose();
+    var transform = new Transform3d(pose.getTranslation(), pose.getRotation());
+    Logger.recordOutput(
+        "Azimuth/TurretCameraPose",
+        new Pose3d(RobotState.getInstance().getEstimatedPose()).transformBy(transform));
   }
 }

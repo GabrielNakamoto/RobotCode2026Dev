@@ -89,7 +89,9 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
             && hood.getAngle().isNear(turretParams.hoodAngle(), TurretConstants.hoodTolerance)) {
           launcher.setSpeed(turretParams.launchSpeed());
         }
-        if (launcher.getSpeed().gt(TurretConstants.shooterWarmupThreshold)) {
+        if (launcher
+            .getSpeed()
+            .gt(turretParams.launchSpeed().minus(TurretConstants.shooterTolerance))) {
           spindexer.feed();
         }
         break;
