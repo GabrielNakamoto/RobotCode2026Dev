@@ -111,7 +111,7 @@ public class Drive extends StateSubsystem<DriveState> {
   }
 
   public Command followChoreoTrajectoryCommand(Trajectory<SwerveSample> trajectory) {
-		return Commands.runOnce(() -> this.followChoreoTrajectory(trajectory));
+		return Commands.runOnce(() -> this.followChoreoTrajectory(trajectory)).andThen(Commands.waitUntil(() -> choreoTrajectoryDone()));
   }
 
   public void followChoreoTrajectory(Trajectory<SwerveSample> trajectory) {
