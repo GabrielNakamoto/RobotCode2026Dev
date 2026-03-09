@@ -73,9 +73,9 @@ public class RobotConfig {
 
     public static final PIDGains trenchYGains = new PIDGains(5.0, 0.0, 0.0);
 
-		public static final PIDGains choreoXGains = new PIDGains(0.0, 0.0, 0.0);
-		public static final PIDGains choreoYGains = new PIDGains(0.0, 0.0, 0.0);
-		public static final PIDGains choreoOmegaGains = new PIDGains(0.0, 0.0, 0.0);
+    public static final PIDGains choreoXGains = new PIDGains(0.0, 0.0, 0.0);
+    public static final PIDGains choreoYGains = new PIDGains(0.0, 0.0, 0.0);
+    public static final PIDGains choreoOmegaGains = new PIDGains(0.0, 0.0, 0.0);
   }
 
   public static final class SpindexerConstants {
@@ -119,7 +119,7 @@ public class RobotConfig {
     public static final Angle azimuthTolerance = Degrees.of(1.5);
     public static final Angle hoodTolerance = Degrees.of(0.5);
     public static final AngularVelocity shotSpeedThreshold = RotationsPerSecond.of(20);
-    public static final double shooterWarmVoltage = 3.0;
+    public static final double shooterIdleVoltage = 1.5;
 
     public static final double azimuthLatencyCompensation = 0.050;
     public static final Transform3d robotToTurret =
@@ -146,18 +146,13 @@ public class RobotConfig {
 
     // Hybrid stddev tuning
     public static final double baseStddevMultiplier = 1.0;
-    public static final double maxReliableDistance = 5.0; // meters
+    public static final double maxReliableDistance = 3.0; // meters
     public static final double distanceScalingExponent = 2.0;
-    public static final double singleTagPenalty = 2.5;
+    public static final double singleTagPenalty = 5.0;
 
     // Filtering thresholds
-    public static final double maxAcceptableDistance = 6.0; // meters
+    public static final double maxAcceptableDistance = 5.0; // meters
     public static final double maxAcceptableStddev = 2.0; // meters
-
-    // Hub-relative blending
-    public static final boolean useHubLocalizationBlending = false;
-    public static final double hubRelativeMaxDistance = 3.5; // prefer hub-relative under this
-    public static final double hubObservationTimeout = 0.5; // seconds
   }
 
   public static final class SimConstants {

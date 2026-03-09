@@ -58,7 +58,7 @@ public class Intake extends StateSubsystem<IntakeState> {
         outputs.intakeVoltage = Volts.zero();
         break;
       case RETRACT:
-        outputs.extendVoltage = Volts.of(-8.0);
+        outputs.extendVoltage = Volts.of(-4.0);
         outputs.intakeVoltage = Volts.of(1.5);
         break;
       case INTAKE:

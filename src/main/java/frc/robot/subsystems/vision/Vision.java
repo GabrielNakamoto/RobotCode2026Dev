@@ -4,13 +4,11 @@ import static edu.wpi.first.units.Units.Seconds;
 
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotConfig.CameraConfig;
 import frc.robot.RobotConfig.VisionConstants;
 import frc.robot.RobotState;
-import frc.robot.RobotState.HubObservation;
 import frc.robot.RobotState.VisionObservation;
 import org.littletonrobotics.junction.Logger;
 
@@ -65,18 +63,6 @@ public class Vision extends SubsystemBase {
       } else if (state.numTags > 0) {
         rejectedMeasurements++;
       }
-
-      // Hub-Relative Processing for Turret Aiming
-      if (state.hubInSight && !state.robotToHub.equals(Pose3d.kZero)) {
-        double distance = state.robotToHub.getTranslation().getNorm();
-        double confidence = calculateHubConfidence(distance);
-
-        RobotState.getInstance()
-            .addHubObservation(
-                new HubObservation(
-                    state.robotToHub, state.primaryTid, state.timestamp, confidence));
-        hubObservations++;
-      }
     }
 
     // Log diagnostic counters
@@ -98,11 +84,6 @@ public class Vision extends SubsystemBase {
     }
 
     return true;
-  }
-
-  // LERP Hub confidence
-  private double calculateHubConfidence(double distance) {
-    return Math.max(0.0, 1.0 - (distance / VisionConstants.hubRelativeMaxDistance));
   }
 
   public void captureRewind(double duration) {

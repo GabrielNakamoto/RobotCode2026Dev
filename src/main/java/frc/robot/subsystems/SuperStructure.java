@@ -31,7 +31,7 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
 
   public SuperStructure(
       Spindexer spindexer, Hood hood, Azimuth azimuth, Launcher launcher, Intake intake) {
-    this.target = TurretTarget.HUB;
+    this.target = TurretTarget.TUNING;
     this.spindexer = spindexer;
     this.hood = hood;
     this.azimuth = azimuth;
@@ -70,23 +70,26 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
   @Override
   public void applyState() {
     Logger.recordOutput("SuperStructure/state", getCurrentState());
+    Logger.recordOutput("SuperStructure/trackingTarget", target);
     TurretState turretParams = RobotState.getInstance().resolveTurretTargetting(target);
 
     azimuth.setAngle(turretParams.azimuthAngle());
     hood.setAngle(turretParams.hoodAngle());
 
-    launcher.setVoltage(TurretConstants.shooterWarmVoltage);
     SuperStructureState state = getCurrentState();
+    launcher.setVoltage(TurretConstants.shooterIdleVoltage);
     switch (state) {
       case IDLE:
-				intake.retract();
-				spindexer.hold();
+        intake.retract();
+        spindexer.hold();
+        break;
       case INTAKE:
-				intake.run();
-				spindexer.hold();
+        intake.run();
+        spindexer.hold();
+        break;
       case UNJAM:
-				intake.stay();
-				spindexer.reverse();
+        intake.stay();
+        spindexer.reverse();
         break;
       case SHOOT:
         launcher.setVoltage(turretParams.launchVoltage());

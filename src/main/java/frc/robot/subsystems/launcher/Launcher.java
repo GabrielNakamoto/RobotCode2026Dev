@@ -17,11 +17,12 @@ public class Launcher extends SubsystemBase {
   }
 
   public void setSpeed(AngularVelocity velocity) {
-    Logger.recordOutput("Launcher/setpoint", velocity);
+    // Logger.recordOutput("Launcher/setpoint", velocity);
     this.io.setSpeed(velocity);
   }
 
   public void setVoltage(double voltage) {
+    Logger.recordOutput("Launcher/setpoint", voltage);
     this.io.setVoltage(voltage);
   }
 

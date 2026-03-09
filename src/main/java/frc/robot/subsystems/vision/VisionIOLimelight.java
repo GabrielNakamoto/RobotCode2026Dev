@@ -82,13 +82,6 @@ public class VisionIOLimelight implements VisionIO {
         "Vision/" + config.name() + "/rawStdDevY", rawStdDevs[7]);
     inputs.stdDevs =
         calculateHybridStdDevs(rawStdDevs, mt2Estimate.avgTagDist, mt2Estimate.tagCount);
-
-    int tid = (int) this.NT.getEntry("tid").getInteger(0);
-    inputs.hubInSight = VisionConstants.hubTags.contains(tid);
-    if (inputs.hubInSight) {
-      inputs.primaryTid = tid;
-      inputs.robotToHub = LimelightHelpers.getTargetPose3d_RobotSpace(config.name());
-    }
   }
 
   private Matrix<N3, N1> calculateHybridStdDevs(

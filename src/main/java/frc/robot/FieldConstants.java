@@ -73,18 +73,25 @@ public class FieldConstants {
     }
   }
 
-	public static class Trench {
-		public static final Translation2d rightTrench = new Translation2d(startingLineLengthX, trenchCenter);
-		public static final Translation2d leftTrench = new Translation2d(startingLineLengthX, Meters.of(fieldWidth).minus(trenchCenter));
+  public static class Trench {
+    public static final Translation2d rightTrench =
+        new Translation2d(startingLineLengthX, trenchCenter);
+    public static final Translation2d leftTrench =
+        new Translation2d(startingLineLengthX, Meters.of(fieldWidth).minus(trenchCenter));
 
-		public static Translation2d getRightTrench() {
-			return AllianceFlip.apply(rightTrench);
-		}
-		public static Translation2d getLeftTrench() {
-			return AllianceFlip.apply(leftTrench);
-		}
-		public static Pose2d getNearestTrench(Pose2d pose) {
-			return pose.nearest(List.of(new Pose2d(getRightTrench(), Rotation2d.kZero), new Pose2d(getLeftTrench(), Rotation2d.kZero)));
-		}
-	}
+    public static Translation2d getRightTrench() {
+      return AllianceFlip.apply(rightTrench);
+    }
+
+    public static Translation2d getLeftTrench() {
+      return AllianceFlip.apply(leftTrench);
+    }
+
+    public static Pose2d getNearestTrench(Pose2d pose) {
+      return pose.nearest(
+          List.of(
+              new Pose2d(getRightTrench(), Rotation2d.kZero),
+              new Pose2d(getLeftTrench(), Rotation2d.kZero)));
+    }
+  }
 }
