@@ -102,16 +102,17 @@ public class RobotContainer {
     PhoenixSync.optimizeAll();
 
     autoChooser = new LoggedDashboardChooser<>("auto choices");
-    autoChooser.addDefaultOption(
-        "autoBuilderTest",
-        AutoBuilder.getTrajectoryCommand(AutoBuilder.testWaypoints, drive, superStructure));
+    /*autoChooser.addDefaultOption(
+    "autoBuilderTest",
+    AutoBuilder.getTrajectoryCommand(AutoBuilder.testWaypoints, drive, superStructure));*/
 
     configureBindings();
   }
 
   private void configureBindings() {
-    driveController.leftBumper().onTrue(superStructure.intake()).onFalse(superStructure.idle());
+    driveController.leftTrigger(0.3).onTrue(superStructure.intake()).onFalse(superStructure.idle());
     driveController.rightTrigger(0.3).onTrue(superStructure.shoot()).onFalse(superStructure.idle());
+    driveController.a().onTrue(superStructure.unjam()).onFalse(superStructure.idle());
   }
 
   private void configureFuelSim() {

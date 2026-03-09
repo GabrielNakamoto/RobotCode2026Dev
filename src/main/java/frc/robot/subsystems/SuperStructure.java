@@ -2,7 +2,6 @@ package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.RobotConfig.SuperStructureState;
 import frc.robot.RobotConfig.TurretConstants;
 import frc.robot.RobotConfig.TurretTarget;
 import frc.robot.RobotState;
@@ -14,6 +13,13 @@ import frc.robot.subsystems.launcher.Launcher;
 import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.util.StateSubsystem;
 import org.littletonrobotics.junction.Logger;
+
+enum SuperStructureState {
+  IDLE,
+  INTAKE,
+  SHOOT,
+  UNJAM
+}
 
 public class SuperStructure extends StateSubsystem<SuperStructureState> {
   private final Spindexer spindexer;
@@ -57,6 +63,10 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
     return Commands.runOnce(() -> setState(SuperStructureState.SHOOT));
   }
 
+  public Command unjam() {
+    return Commands.runOnce(() -> setState(SuperStructureState.UNJAM));
+  }
+
   @Override
   public void applyState() {
     Logger.recordOutput("SuperStructure/state", getCurrentState());
@@ -66,16 +76,22 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
     hood.setAngle(turretParams.hoodAngle());
 
     launcher.setVoltage(0.0);
-    switch (getCurrentState()) {
+    SuperStructureState state = getCurrentState();
+    switch (state) {
       case IDLE:
       case INTAKE:
+      case UNJAM:
         launcher.setVoltage(TurretConstants.shooterWarmVoltage);
-        if (getCurrentState() == SuperStructureState.INTAKE) {
+        if (state == SuperStructureState.INTAKE) {
           intake.run();
         } else {
           intake.retract();
         }
-        spindexer.hold();
+        if (state == SuperStructureState.UNJAM) {
+          spindexer.hold();
+        } else {
+          spindexer.reverse();
+        }
         break;
       case SHOOT:
         launcher.setVoltage(turretParams.launchVoltage());

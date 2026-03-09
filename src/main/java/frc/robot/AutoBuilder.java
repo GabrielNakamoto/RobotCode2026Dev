@@ -1,19 +1,7 @@
 package frc.robot;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.RobotConfig.SuperStructureState;
-import frc.robot.subsystems.SuperStructure;
-import frc.robot.subsystems.drive.Drive;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.BooleanSupplier;
-import org.littletonrobotics.junction.Logger;
-
 public class AutoBuilder {
+  /*
   public interface AutoWaypoint {
     Pose2d getTarget();
 
@@ -114,5 +102,5 @@ public class AutoBuilder {
     testWaypoints.add(
         new StopWaypoint(
             neutralTrench, SuperStructureState.IDLE, SuperStructureState.IDLE, () -> true));
-  }
+  }*/
 }

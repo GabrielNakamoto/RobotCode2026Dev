@@ -20,12 +20,6 @@ import java.util.List;
  * Complete description of physical and virtual robot configuration
  */
 public class RobotConfig {
-  public enum SuperStructureState {
-    IDLE,
-    INTAKE,
-    SHOOT
-  }
-
   public enum TurretTarget {
     HUB,
     NEAREST_TAG,
