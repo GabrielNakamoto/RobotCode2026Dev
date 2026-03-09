@@ -56,5 +56,12 @@ public class Azimuth extends SubsystemBase {
     Logger.recordOutput(
         "Azimuth/TurretCameraPose",
         new Pose3d(RobotState.getInstance().getEstimatedPose()).plus(transform));
+    Logger.recordOutput(
+        "Azimuth/TurretPose",
+        new Pose3d(
+            Inches.of(-6),
+            Inches.of(-6),
+            Inches.of(13.375),
+            new Rotation3d(0.0, 0.0, getAngle().in(Radians))));
   }
 }

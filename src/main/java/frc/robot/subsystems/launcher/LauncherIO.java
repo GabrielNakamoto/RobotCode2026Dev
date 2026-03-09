@@ -21,4 +21,6 @@ public interface LauncherIO {
   public default void updateInputs(LauncherIOInputs inputs) {}
 
   public default void setSpeed(AngularVelocity velocity) {}
+
+  public default void setVoltage(double voltage) {}
 }

@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.*;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Distance;
@@ -63,8 +64,9 @@ public class FieldConstants {
         new Translation3d(
             aprilLayout.getTagPose(26).get().getX() + width / 2.0, fieldWidth / 2.0, innerHeight);
 
-    public static Pose2d getTopCenter() {
-      return AllianceFlip.apply(new Pose2d(topCenterPoint.toTranslation2d(), Rotation2d.kZero));
+    public static Translation2d getTopCenter() {
+      return new Translation2d(fieldLength, fieldWidth).minus(topCenterPoint.toTranslation2d());
+      // return AllianceFlip.apply(new Pose2d(topCenterPoint.toTranslation2d(), Rotation2d.kZero));
     }
   }
 

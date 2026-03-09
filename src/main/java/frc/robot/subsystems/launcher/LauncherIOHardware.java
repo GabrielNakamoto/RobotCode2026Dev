@@ -46,4 +46,9 @@ public class LauncherIOHardware implements LauncherIO {
   public void setSpeed(AngularVelocity velocity) {
     motor.setControl(request.withVelocity(velocity));
   }
+
+  @Override
+  public void setVoltage(double voltage) {
+    motor.setVoltage(voltage);
+  }
 }

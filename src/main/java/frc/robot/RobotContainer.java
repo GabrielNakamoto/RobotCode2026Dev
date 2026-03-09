@@ -25,8 +25,8 @@ import frc.robot.subsystems.spindexer.*;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
-import frc.robot.util.AllianceFlip;
 import frc.robot.util.FuelSim;
+import frc.robot.util.LoggedTunableNumber;
 import frc.robot.util.PhoenixSync;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -44,6 +44,9 @@ public class RobotContainer {
   public final Vision vision;
   public FuelSim fuelSim = null;
   private final LoggedDashboardChooser<Command> autoChooser;
+  private LoggedTunableNumber launcherVelocity = new LoggedTunableNumber("launcherRPS", 30.0);
+  private LoggedTunableNumber hoodAngle = new LoggedTunableNumber("hoodAngleDegrees", 0.0);
+  private LoggedTunableNumber launcherVoltage = new LoggedTunableNumber("launcherVoltage", 12.0);
 
   public RobotContainer() {
     switch (RobotConfig.getMode()) {
@@ -107,29 +110,28 @@ public class RobotContainer {
     }
     Supplier<TurretState> testSetpoints =
         () -> {
-          double testHood = driveController.getLeftTriggerAxis() * 0.107;
-
+          // double testHood = driveController.getLeftTriggerAxis() * 0.107;
           Pose2d robotPose = RobotState.getInstance().getEstimatedPose();
-          Translation2d tagPosition =
-              AllianceFlip.apply(
-                  FieldConstants.aprilLayout
-                      .getTagPose(10)
-                      .get()
-                      .getTranslation()
-                      .toTranslation2d());
+          Translation2d tagPosition = FieldConstants.Hub.getTopCenter();
+          // FieldConstants.Hub.getTopCenter().getTranslation();
           Rotation2d fieldAngleToTag = tagPosition.minus(robotPose.getTranslation()).getAngle();
           Rotation2d robotRelativeAngle = fieldAngleToTag.minus(robotPose.getRotation());
 
           Angle turretToTag = robotRelativeAngle.getMeasure();
 
           return new TurretState(
-              turretToTag, Units.Rotations.of(testHood), Units.RotationsPerSecond.of(30.0));
+              turretToTag,
+              Units.Degrees.of(hoodAngle.getAsDouble()),
+              launcherVoltage.getAsDouble());
+          // Units.RotationsPerSecond.of(launcherVelocity.getAsDouble()));
         };
     superStructure = new SuperStructure(testSetpoints, spindexer, hood, azimuth, launcher, intake);
+    // superStructure = new SuperStructure(RobotState.getInstance()::getTurretSetpoint, spindexer,
+    // hood, azimuth, launcher, intake);
     PhoenixSync.optimizeAll();
 
     autoChooser = new LoggedDashboardChooser<>("auto choices");
-    autoChooser.addOption(
+    autoChooser.addDefaultOption(
         "autoBuilderTest",
         AutoBuilder.getTrajectoryCommand(AutoBuilder.testWaypoints, drive, superStructure));
 

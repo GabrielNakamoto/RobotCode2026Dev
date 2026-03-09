@@ -38,7 +38,8 @@ public class AzimuthIOHardware implements AzimuthIO {
     config.withSlot0(TurretConstants.azimuthGains.toSlot0Configs());
     config.CurrentLimits.withStatorCurrentLimit(20);
     config.MotorOutput.withInverted(InvertedValue.CounterClockwise_Positive)
-        .withNeutralMode(NeutralModeValue.Brake);
+        .withNeutralMode(NeutralModeValue.Coast);
+    // .withNeutralMode(NeutralModeValue.Brake);
     config.Feedback.withRemoteCANcoder(encoder)
         .withFeedbackSensorSource(FeedbackSensorSourceValue.FusedCANcoder)
         .withSensorToMechanismRatio(1.0)

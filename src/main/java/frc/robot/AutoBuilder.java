@@ -11,6 +11,7 @@ import frc.robot.subsystems.drive.Drive;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BooleanSupplier;
+import org.littletonrobotics.junction.Logger;
 
 public class AutoBuilder {
   public interface AutoWaypoint {
@@ -19,7 +20,11 @@ public class AutoBuilder {
     Command getCommand(Drive drive, SuperStructure superStructure);
   }
 
-  public record StopWaypoint(Pose2d pose, SuperStructureState superState, BooleanSupplier finished)
+  public record StopWaypoint(
+      Pose2d pose,
+      SuperStructureState throughState,
+      SuperStructureState stoppedState,
+      BooleanSupplier finished)
       implements AutoWaypoint {
     @Override
     public Pose2d getTarget() {
@@ -31,7 +36,7 @@ public class AutoBuilder {
       return Commands.runOnce(
               () -> {
                 drive.driveToPose(pose);
-                superStructure.setState(superState);
+                superStructure.setState(throughState);
               })
           .andThen(
               Commands.waitUntil(() -> drive.atDriveToPoseSetpoint() && finished.getAsBoolean()));
@@ -49,6 +54,7 @@ public class AutoBuilder {
     public Command getCommand(Drive drive, SuperStructure superStructure) {
       return Commands.runOnce(
               () -> {
+                Logger.recordOutput("AutoBuilder/superState", superState);
                 drive.driveToPose(pose);
                 superStructure.setState(superState);
               })
@@ -59,37 +65,6 @@ public class AutoBuilder {
                     double distance = current.getTranslation().getDistance(pose.getTranslation());
                     return distance < proximityMeters;
                   }));
-    }
-  }
-
-  /** Hybrid waypoint - blends velocity toward lookahead, ends when reaching lookahead pose. */
-  public record HybridWaypoint(
-      Pose2d pose,
-      Pose2d lookahead,
-      SuperStructureState superState,
-      double blendStartMeters,
-      double proximityMeters)
-      implements AutoWaypoint {
-    @Override
-    public Pose2d getTarget() {
-      return pose;
-    }
-
-    @Override
-    public Command getCommand(Drive drive, SuperStructure superStructure) {
-      return Commands.runOnce(
-              () -> {
-                drive.driveToPoseWithLookahead(pose, lookahead, blendStartMeters);
-                superStructure.setState(superState);
-              })
-          .andThen(
-              Commands.waitUntil(
-                  () ->
-                      RobotState.getInstance()
-                              .getEstimatedPose()
-                              .getTranslation()
-                              .getDistance(lookahead.getTranslation())
-                          < proximityMeters));
     }
   }
 
@@ -106,32 +81,38 @@ public class AutoBuilder {
   public static final List<AutoWaypoint> testWaypoints = new ArrayList<>();
 
   static {
-    testWaypoints.add(
-        new StopWaypoint(
-            new Pose2d(3.633, 0.615, Rotation2d.fromRadians(1.567)),
-            SuperStructureState.IDLE,
-            () -> true));
-    testWaypoints.add(
+    Pose2d neutralTrench = new Pose2d(4.389, 0.615, Rotation2d.kZero);
+
+    AutoWaypoint wp1 =
         new ThroughWaypoint(
-            new Pose2d(7.854, 0.615, Rotation2d.fromRadians(1.567)),
-            SuperStructureState.IDLE,
-            Units.inchesToMeters(45)));
-    testWaypoints.add(
-        new HybridWaypoint(
-            new Pose2d(8.31, 2.89, Rotation2d.fromRadians(1.567)),
-            new Pose2d(6.72, 1.615, Rotation2d.fromRadians(1.567)), // Lookahead to next
+            new Pose2d(7.854, 0.615, Rotation2d.kZero),
             SuperStructureState.INTAKE,
-            Units.inchesToMeters(72), // Start blending 6 feet out
-            Units.inchesToMeters(18)));
-    testWaypoints.add(
+            Units.inchesToMeters(55));
+    AutoWaypoint wp2 =
         new ThroughWaypoint(
-            new Pose2d(5.733, 0.615, Rotation2d.fromRadians(1.567)),
-            SuperStructureState.IDLE,
-            Units.inchesToMeters(20)));
+            new Pose2d(5.733, 0.615, Rotation2d.kZero),
+            SuperStructureState.INTAKE,
+            Units.inchesToMeters(30));
+    AutoWaypoint fuelPoint =
+        new ThroughWaypoint(
+            new Pose2d(8.31, 3.89, Rotation2d.fromRadians(1.26)),
+            SuperStructureState.INTAKE,
+            Units.inchesToMeters(65));
+
     testWaypoints.add(
         new StopWaypoint(
-            new Pose2d(3.633, 0.615, Rotation2d.fromRadians(1.567)),
-            SuperStructureState.IDLE,
-            () -> true));
+            neutralTrench, SuperStructureState.IDLE, SuperStructureState.IDLE, () -> true));
+    testWaypoints.add(wp1);
+    testWaypoints.add(fuelPoint);
+    testWaypoints.add(wp2);
+    testWaypoints.add(
+        new StopWaypoint(
+            neutralTrench, SuperStructureState.RETRACT, SuperStructureState.RETRACT, () -> true));
+    testWaypoints.add(wp1);
+    testWaypoints.add(fuelPoint);
+    testWaypoints.add(wp2);
+    testWaypoints.add(
+        new StopWaypoint(
+            neutralTrench, SuperStructureState.RETRACT, SuperStructureState.RETRACT, () -> true));
   }
 }

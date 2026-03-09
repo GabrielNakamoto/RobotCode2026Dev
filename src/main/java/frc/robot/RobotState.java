@@ -2,13 +2,10 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
-import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
@@ -16,10 +13,8 @@ import edu.wpi.first.math.interpolation.InverseInterpolator;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.*;
 import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj.Timer;
-import frc.robot.RobotConfig.TurretConstants;
 import frc.robot.RobotConfig.VisionConstants;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveIOInputsAutoLogged;
@@ -32,7 +27,7 @@ import org.littletonrobotics.junction.Logger;
 public class RobotState {
   private static final InterpolatingTreeMap<Double, Rotation2d> hoodAngleMap =
       new InterpolatingTreeMap<>(InverseInterpolator.forDouble(), Rotation2d::interpolate);
-  private static final InterpolatingDoubleTreeMap launcherSpeedMap =
+  private static final InterpolatingDoubleTreeMap launcherVoltageMap =
       new InterpolatingDoubleTreeMap();
   private static final InterpolatingDoubleTreeMap timeOfFlightMap =
       new InterpolatingDoubleTreeMap();
@@ -41,7 +36,17 @@ public class RobotState {
   private static final double kConvergenceEpsilon = 0.001;
 
   static {
-    // TODO: measure
+    hoodAngleMap.put(3.0, Rotation2d.fromDegrees(7.5));
+    launcherVoltageMap.put(3.0, 10.0);
+
+    hoodAngleMap.put(2.5, Rotation2d.fromDegrees(5.5));
+    launcherVoltageMap.put(2.5, 10.0);
+
+    hoodAngleMap.put(2.0, Rotation2d.fromDegrees(6.5));
+    launcherVoltageMap.put(2.0, 10.5);
+
+    hoodAngleMap.put(1.74, Rotation2d.fromDegrees(2.5));
+    launcherVoltageMap.put(1.74, 10.25);
   }
 
   private Supplier<Pose2d> simulatedDrivePoseSupplier = () -> Pose2d.kZero;
@@ -120,6 +125,22 @@ public class RobotState {
     return simulatedDrivePoseSupplier.get();
   }
 
+  public TurretState getTurretSetpoint() {
+    Pose2d robotPose = getEstimatedPose();
+    Translation2d target = FieldConstants.Hub.getTopCenter();
+    double distance = robotPose.getTranslation().getDistance(target);
+
+    Angle robotToTarget =
+        target
+            .minus(robotPose.getTranslation())
+            .getAngle()
+            .minus(robotPose.getRotation())
+            .getMeasure();
+    return new TurretState(
+        robotToTarget, hoodAngleMap.get(distance).getMeasure(), launcherVoltageMap.get(distance));
+  }
+
+  /*
   public TurretState getTurretSetpoints(TurretState turretState) {
     Pose2d robotPose = getEstimatedPose();
     ChassisSpeeds speeds = driveInputs.Speeds;
@@ -176,7 +197,7 @@ public class RobotState {
   }
 
   private Translation2d calculateBlendedHubTarget(Pose2d robotPose) {
-    Translation2d globalHubTarget = FieldConstants.Hub.getTopCenter().getTranslation();
+    Translation2d globalHubTarget = FieldConstants.Hub.getTopCenter(); // .getTranslation();
 
     Optional<HubObservation> hubObs = getLatestHubObservation();
     if (hubObs.isEmpty()) {
@@ -210,7 +231,7 @@ public class RobotState {
         "RobotState/hubBlend/globalTarget", new Pose2d(globalHubTarget, Rotation2d.kZero));
 
     return globalHubTarget.interpolate(hubFromVision, blendFactor);
-  }
+  }*/
 
   public record VisionObservation(Pose2d pose, Vector<N3> stdDevs, Time timestamp) {
     public double timestampSeconds() {
@@ -220,5 +241,6 @@ public class RobotState {
 
   public record HubObservation(Pose3d robotToHub, int tagId, double timestamp, double confidence) {}
 
-  public record TurretState(Angle azimuthAngle, Angle hoodAngle, AngularVelocity launchSpeed) {}
+  public record TurretState(Angle azimuthAngle, Angle hoodAngle, double launchVoltage) {}
+  // public record TurretState(Angle azimuthAngle, Angle hoodAngle, AngularVelocity launchSpeed) {}
 }

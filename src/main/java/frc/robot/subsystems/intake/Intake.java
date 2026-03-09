@@ -2,6 +2,7 @@ package frc.robot.subsystems.intake;
 
 import static edu.wpi.first.units.Units.*;
 
+import frc.robot.RobotConfig.IntakeConstants;
 import frc.robot.subsystems.intake.IntakeIO.IntakeIOOutputs;
 import frc.robot.util.StateSubsystem;
 import org.littletonrobotics.junction.Logger;
@@ -10,12 +11,14 @@ enum IntakeState {
   IDLE,
   RETRACT,
   INTAKE,
+  AGITATE
 }
 
 public class Intake extends StateSubsystem<IntakeState> {
   private final IntakeIO io;
   private IntakeIOInputsAutoLogged inputs = new IntakeIOInputsAutoLogged();
   private IntakeIOOutputs outputs = new IntakeIOOutputs();
+  private boolean agitatingForward = false;
 
   public Intake(IntakeIO io) {
     this.io = io;
@@ -43,6 +46,10 @@ public class Intake extends StateSubsystem<IntakeState> {
     setState(IntakeState.IDLE);
   }
 
+  public void agitate() {
+    setState(IntakeState.AGITATE);
+  }
+
   @Override
   public void applyState() {
     switch (getCurrentState()) {
@@ -57,12 +64,25 @@ public class Intake extends StateSubsystem<IntakeState> {
         break;
       case INTAKE:
         outputs.extendVoltage = Volts.of(8.0);
-        if (inputs.extendPosition.gt(Inches.of(5.5))) {
-          outputs.intakeVoltage = Volts.of(10.0);
-        } else {
-          outputs.intakeVoltage = Volts.zero();
-        }
+        outputs.intakeVoltage = Volts.of(12.0);
         break;
+      case AGITATE:
+        if (agitatingForward) {
+          if (inputs.extendPosition.in(Inches) > 10.0) {
+            agitatingForward = false;
+          }
+          outputs.extendVoltage = Volts.of(4.0);
+        } else {
+          if (inputs.extendPosition.in(Inches) < 8.0) {
+            agitatingForward = true;
+          }
+          outputs.extendVoltage = Volts.of(-4.0);
+        }
+        outputs.intakeVoltage = Volts.of(6.0);
+        break;
+    }
+    if (inputs.extendPosition.lt(IntakeConstants.maxRetraction.plus(Inches.of(0.25)))) {
+      outputs.intakeVoltage = Volts.of(0.0);
     }
   }
 }

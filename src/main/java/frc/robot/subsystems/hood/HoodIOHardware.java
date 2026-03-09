@@ -25,7 +25,7 @@ public class HoodIOHardware implements HoodIO {
     var config = new TalonFXConfiguration();
     config.withSlot0(TurretConstants.hoodGains.toSlot0Configs());
     config.MotorOutput.withInverted(InvertedValue.CounterClockwise_Positive)
-        .withNeutralMode(NeutralModeValue.Brake);
+        .withNeutralMode(NeutralModeValue.Coast);
     config.Feedback.withSensorToMechanismRatio(TurretConstants.hoodGearRatio);
     config.CurrentLimits.withStatorCurrentLimit(20);
     config.SoftwareLimitSwitch.withForwardSoftLimitEnable(true)

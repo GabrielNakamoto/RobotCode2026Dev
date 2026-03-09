@@ -21,6 +21,10 @@ public class Launcher extends SubsystemBase {
     this.io.setSpeed(velocity);
   }
 
+  public void setVoltage(double voltage) {
+    this.io.setVoltage(voltage);
+  }
+
   @Override
   public void periodic() {
     io.updateInputs(inputs);

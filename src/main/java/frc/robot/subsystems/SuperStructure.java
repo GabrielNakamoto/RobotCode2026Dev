@@ -1,11 +1,9 @@
 package frc.robot.subsystems;
 
-import static edu.wpi.first.units.Units.RotationsPerSecond;
-
+import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.RobotConfig.SuperStructureState;
-import frc.robot.RobotConfig.TurretConstants;
 import frc.robot.RobotState.TurretState;
 import frc.robot.subsystems.azimuth.Azimuth;
 import frc.robot.subsystems.hood.Hood;
@@ -67,10 +65,16 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
     azimuth.setAngle(turretParams.azimuthAngle());
     hood.setAngle(turretParams.hoodAngle());
 
+    launcher.setVoltage(0.0);
     switch (getCurrentState()) {
+      case RETRACT:
       case IDLE:
-        launcher.setSpeed(RotationsPerSecond.of(0.0));
-        intake.stay();
+        // launcher.setSpeed(RotationsPerSecond.of(0.0));
+        if (getCurrentState() == SuperStructureState.RETRACT) {
+          intake.retract();
+        } else {
+          intake.stay();
+        }
         spindexer.hold();
         break;
       case INTAKE:
@@ -79,16 +83,17 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
         break;
       case SHOOT:
         // TODO: move intake back and forth + faster spin to unstick balls
-        intake.retract();
-        launcher.setSpeed(turretParams.launchSpeed());
+        // intake.retract();
+        intake.agitate();
+        launcher.setVoltage(turretParams.launchVoltage());
+        spindexer.feed();
+        // launcher.setSpeed(turretParams.launchSpeed());
         /*
         if (azimuth.getAngle().isNear(turretParams.azimuthAngle(), TurretConstants.azimuthTolerance)
             && hood.getAngle().isNear(turretParams.hoodAngle(), TurretConstants.hoodTolerance)) {
           launcher.setSpeed(turretParams.launchSpeed());
         } */
-        if (launcher
-            .getSpeed()
-            .gt(turretParams.launchSpeed().minus(TurretConstants.shooterTolerance))) {
+        if (launcher.getSpeed().gt(Units.RotationsPerSecond.of(20))) {
           spindexer.feed();
         }
         break;

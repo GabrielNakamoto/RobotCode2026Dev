@@ -23,7 +23,8 @@ public class RobotConfig {
   public enum SuperStructureState {
     IDLE,
     INTAKE,
-    SHOOT
+    SHOOT,
+    RETRACT
   }
 
   public enum OperationMode {
@@ -96,8 +97,8 @@ public class RobotConfig {
     public static final double extendGearRatio = 1.8364;
     public static final PIDGains extendGains = new PIDGains(1.05, 0.0, 0.0);
 
-    public static final Distance maxExtension = Inches.of(11.15);
-    public static final Distance maxRetraction = Inches.of(6.5);
+    public static final Distance maxExtension = Inches.of(11.4);
+    public static final Distance maxRetraction = Inches.of(7.5);
   }
 
   public static final class TurretConstants {
@@ -127,7 +128,7 @@ public class RobotConfig {
 
     public static final Rotation3d cameraRotation =
         new Rotation3d(0.0, Units.degreesToRadians(30), 0.0);
-    public static final double azimuthRadiusMeters = Units.inchesToMeters(7.0733 - 0.5);
+    public static final double azimuthRadiusMeters = Units.inchesToMeters(7.0733);
   }
 
   public static final class VisionConstants {

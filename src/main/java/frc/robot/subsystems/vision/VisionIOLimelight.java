@@ -40,7 +40,7 @@ public class VisionIOLimelight implements VisionIO {
       LimelightHelpers.SetIMUMode(config.name(), 1);
     } else {
       LimelightHelpers.SetThrottle(config.name(), 0);
-      LimelightHelpers.SetIMUMode(config.name(), 4);
+      LimelightHelpers.SetIMUMode(config.name(), 3);
     }
 
     double lastHeartbeat = heartBeat;
@@ -63,9 +63,8 @@ public class VisionIOLimelight implements VisionIO {
     LimelightHelpers.SetRobotOrientation(
         config.name(), gyroYaw.getDegrees(), 0.0, 0.0, 0.0, 0.0, 0.0);
 
-    /*
-    LimelightHelpers.PoseEstimate mt2Estimate =
-        LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(config.name());*/
+    /*LimelightHelpers.PoseEstimate mt2Estimate =
+    LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(config.name());*/
     LimelightHelpers.PoseEstimate mt2Estimate =
         LimelightHelpers.getBotPoseEstimate_wpiBlue(config.name());
     inputs.avgTagDist = mt2Estimate.avgTagDist;

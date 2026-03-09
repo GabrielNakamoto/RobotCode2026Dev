@@ -101,6 +101,10 @@ public class Drive extends StateSubsystem<DriveState> {
     applyState();
   }
 
+  public void setIdle() {
+    setState(DriveState.IDLE);
+  }
+
   public void followChoreoTrajectory(Trajectory<SwerveSample> traj) {
     choreoTrajectory = Optional.of(traj);
     setState(DriveState.CHOREO);
