@@ -75,13 +75,12 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
     azimuth.setAngle(turretParams.azimuthAngle());
     hood.setAngle(turretParams.hoodAngle());
 
-    launcher.setVoltage(0.0);
+    launcher.setVoltage(TurretConstants.shooterWarmVoltage);
     SuperStructureState state = getCurrentState();
     switch (state) {
       case IDLE:
       case INTAKE:
       case UNJAM:
-        launcher.setVoltage(TurretConstants.shooterWarmVoltage);
         if (state == SuperStructureState.INTAKE) {
           intake.run();
         } else {

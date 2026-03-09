@@ -1,5 +1,7 @@
 package frc.robot.subsystems.drive;
 
+import static edu.wpi.first.units.Units.*;
+
 import choreo.trajectory.SwerveSample;
 import choreo.trajectory.Trajectory;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -13,9 +15,12 @@ import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -45,11 +50,6 @@ public class Drive extends StateSubsystem<DriveState> {
   private final PIDController trenchYController = DriveConstants.trenchYGains.toController();
 
   private Pose2d targetDrivePose = null;
-  private Pose2d lookaheadPose = null;
-  private double blendStartDistance = 0.0;
-  private Optional<Trajectory<SwerveSample>> choreoTrajectory = Optional.empty();
-  private Timer choreoTimer = new Timer();
-
   private SwerveRequest.ApplyRobotSpeeds robotRelativeRequest =
       new SwerveRequest.ApplyRobotSpeeds();
   private SwerveRequest.FieldCentric fieldRequest =
@@ -95,14 +95,6 @@ public class Drive extends StateSubsystem<DriveState> {
 
   public void driveToPose(Pose2d target) {
     this.targetDrivePose = target;
-    this.lookaheadPose = null;
-    setState(DriveState.TO_POSE);
-  }
-
-  public void driveToPoseWithLookahead(Pose2d target, Pose2d lookahead, double blendStartMeters) {
-    this.targetDrivePose = target;
-    this.lookaheadPose = lookahead;
-    this.blendStartDistance = blendStartMeters;
     setState(DriveState.TO_POSE);
   }
 
@@ -146,7 +138,7 @@ public class Drive extends StateSubsystem<DriveState> {
         if (shouldAlignTrench(robotPose)) setState(DriveState.TRENCH);
         break;
       case TRENCH:
-        Pose2d trenchPose = robotPose.nearest(FieldConstants.trenchPoses);
+        Pose2d trenchPose = FieldConstants.Trench.getNearestTrench(robotPose);
         applyRequest(trenchRequest(robotPose, trenchPose));
         if (robotPose.getTranslation().getDistance(trenchPose.getTranslation())
             < Units.inchesToMeters(2.0)) setState(DriveState.TELEOP);
@@ -160,11 +152,12 @@ public class Drive extends StateSubsystem<DriveState> {
     }
   }
 
-  // TODO: how do we decide when to align?
-  // - Maybe align sooner if we are pointing in trench direction
-  // / dont align if we arent driving very fast
   private boolean shouldAlignTrench(Pose2d robotPose) {
-    return false;
+		Pose2d trenchPose = FieldConstants.Trench.getNearestTrench(robotPose);
+		Rotation2d trenchHeading = trenchPose.getTranslation().minus(robotPose.getTranslation()).getAngle();
+		Rotation2d speedHeading = new Translation2d(inputs.Speeds.vxMetersPerSecond, inputs.Speeds.vyMetersPerSecond).getAngle();
+		double vmag = Math.hypot(inputs.Speeds.vxMetersPerSecond, inputs.Speeds.vyMetersPerSecond);
+    return vmag > 2.0 && trenchHeading.minus(speedHeading).getMeasure().lt(Degrees.of(60));
   }
 
   // Match requested x joystick with output y to align to center of trench

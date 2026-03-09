@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.*;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Distance;
@@ -72,14 +73,18 @@ public class FieldConstants {
     }
   }
 
-  public static final List<Pose2d> trenchPoses;
+	public static class Trench {
+		public static final Translation2d rightTrench = new Translation2d(startingLineLengthX, trenchCenter);
+		public static final Translation2d leftTrench = new Translation2d(startingLineLengthX, Meters.of(fieldWidth).minus(trenchCenter));
 
-  static {
-    List<Pose2d> blueTrenchPoses =
-        List.of(
-            new Pose2d(startingLineLengthX, trenchCenter, Rotation2d.kZero),
-            new Pose2d(
-                startingLineLengthX, Meters.of(fieldWidth).minus(trenchCenter), Rotation2d.kZero));
-    trenchPoses = blueTrenchPoses.stream().map(AllianceFlip::apply).toList();
-  }
+		public static Translation2d getRightTrench() {
+			return AllianceFlip.apply(rightTrench);
+		}
+		public static Translation2d getLeftTrench() {
+			return AllianceFlip.apply(leftTrench);
+		}
+		public static Pose2d getNearestTrench(Pose2d pose) {
+			return pose.nearest(List.of(new Pose2d(getRightTrench(), Rotation2d.kZero), new Pose2d(getLeftTrench(), Rotation2d.kZero)));
+		}
+	}
 }
