@@ -195,6 +195,7 @@ public class RobotState {
         robotToTarget, hoodAngleMap.get(distance).getMeasure(), launcherVoltageMap.get(distance));
   }
 
+  // https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/dynamic-shooting.html
   public TurretState getShootOnTheMoveTurretSetpoint() {
     Pose2d robotPose = getEstimatedPose();
     Translation2d target =

@@ -31,7 +31,6 @@ enum DriveState {
   IDLE,
   TO_POSE,
   TELEOP,
-  CHOREO,
   TRENCH,
 }
 
@@ -43,10 +42,6 @@ public class Drive extends StateSubsystem<DriveState> {
 
   private final PIDController linearController = DriveConstants.toPoseLinearGains.toController();
   private final PIDController omegaController = DriveConstants.toPoseOmegaGains.toController();
-  private final PIDController choreoXController = DriveConstants.choreoLinearGains.toController();
-  private final PIDController choreoYController = DriveConstants.choreoLinearGains.toController();
-  private final PIDController choreoThetaController =
-      DriveConstants.choreoThetaGains.toController();
   private final PIDController trenchYController = DriveConstants.trenchYGains.toController();
 
   private Pose2d targetDrivePose = null;
@@ -57,11 +52,6 @@ public class Drive extends StateSubsystem<DriveState> {
 
   private SwerveRequest.ApplyRobotSpeeds robotRelativeRequest =
       new SwerveRequest.ApplyRobotSpeeds();
-  private SwerveRequest.FieldCentricFacingAngle driveAtAngle =
-      new SwerveRequest.FieldCentricFacingAngle()
-          .withForwardPerspective(ForwardPerspectiveValue.BlueAlliance)
-          .withDriveRequestType(DriveRequestType.Velocity)
-          .withHeadingPID(4, 0, 0);
   private SwerveRequest.FieldCentric fieldRequest =
       new SwerveRequest.FieldCentric()
           .withForwardPerspective(ForwardPerspectiveValue.BlueAlliance)
@@ -78,8 +68,6 @@ public class Drive extends StateSubsystem<DriveState> {
     linearController.setTolerance(DriveConstants.toPoseLinearTolerance);
     omegaController.setTolerance(DriveConstants.toPoseThetaTolerance);
     omegaController.enableContinuousInput(-Math.PI, Math.PI);
-
-    choreoThetaController.enableContinuousInput(-Math.PI, Math.PI);
 
     setState(DriveState.IDLE);
 
@@ -103,11 +91,6 @@ public class Drive extends StateSubsystem<DriveState> {
 
   public void setIdle() {
     setState(DriveState.IDLE);
-  }
-
-  public void followChoreoTrajectory(Trajectory<SwerveSample> traj) {
-    choreoTrajectory = Optional.of(traj);
-    setState(DriveState.CHOREO);
   }
 
   public void driveToPose(Pose2d target) {
@@ -142,11 +125,6 @@ public class Drive extends StateSubsystem<DriveState> {
         linearController.reset();
         omegaController.reset();
         break;
-      case CHOREO:
-        choreoYController.reset();
-        choreoXController.reset();
-        choreoThetaController.reset();
-        break;
       default:
         break;
     }
@@ -166,9 +144,6 @@ public class Drive extends StateSubsystem<DriveState> {
                 .withVelocityY(speeds.get(1))
                 .withRotationalRate(speeds.get(2)));
         if (shouldAlignTrench(robotPose)) setState(DriveState.TRENCH);
-        break;
-      case CHOREO:
-        if (choreoTrajectory.isPresent()) applyRequest(choreoRequest(robotPose));
         break;
       case TRENCH:
         Pose2d trenchPose = robotPose.nearest(FieldConstants.trenchPoses);
@@ -205,37 +180,6 @@ public class Drive extends StateSubsystem<DriveState> {
     return fieldRequest.withVelocityX(xOutput).withVelocityY(yOutput).withRotationalRate(omega);
   }
 
-  private SwerveRequest choreoRequest(Pose2d robotPose) {
-    if (!choreoTimer.isRunning()) choreoTimer.restart();
-    var sampleAt = choreoTrajectory.get().sampleAt(choreoTimer.get(), false);
-    if (sampleAt.isEmpty() || choreoTimer.get() > choreoTrajectory.get().getTotalTime()) {
-      choreoTrajectory = Optional.empty();
-      setState(DriveState.TELEOP);
-      choreoTimer.stop();
-      return brakeRequest;
-    }
-
-    var sample = sampleAt.get();
-
-    Logger.recordOutput("Drive/choreo/elapsedTime", choreoTimer.get());
-    Logger.recordOutput("Drive/choreo/totalTime", choreoTrajectory.get().getTotalTime());
-    Logger.recordOutput("Drive/choreo/trajectoryName", choreoTrajectory.get().name());
-    Logger.recordOutput("Drive/choreo/target", sample.getPose());
-
-    double vx = sample.vx + choreoXController.calculate(robotPose.getX(), sample.x);
-    double vy = sample.vy + choreoYController.calculate(robotPose.getY(), sample.y);
-    double omega =
-        sample.omega
-            + choreoThetaController.calculate(robotPose.getRotation().getRadians(), sample.heading);
-    var requestedSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(vx, vy, omega, inputs.gyroYaw);
-
-    Logger.recordOutput("Drive/choreo/vx", requestedSpeeds.vxMetersPerSecond);
-    Logger.recordOutput("Drive/choreo/vy", requestedSpeeds.vyMetersPerSecond);
-    Logger.recordOutput("Drive/choreo/omega", requestedSpeeds.omegaRadiansPerSecond);
-
-    return fieldRequest.withVelocityX(vx).withVelocityY(vy).withRotationalRate(omega);
-  }
-
   public boolean atDriveToPoseSetpoint() {
     Pose2d robotPose = RobotState.getInstance().getEstimatedPose();
     double dist = robotPose.getTranslation().getDistance(targetDrivePose.getTranslation());
@@ -255,22 +199,6 @@ public class Drive extends StateSubsystem<DriveState> {
     double vx = linearOutput * headingToTarget.getCos();
     double vy = linearOutput * headingToTarget.getSin();
     Rotation2d targetHeading = target.getRotation();
-
-    // Blend with lookahead if present and within blend range
-    if (lookaheadPose != null && distance < blendStartDistance) {
-      var toLookahead = lookaheadPose.getTranslation().minus(robotPose.getTranslation());
-      Rotation2d headingToLookahead = toLookahead.getAngle();
-      double vxLookahead = linearOutput * headingToLookahead.getCos();
-      double vyLookahead = linearOutput * headingToLookahead.getSin();
-
-      // Quadratic blend: 0 at blendStart, 1 at target
-      double t = 1.0 - (distance / blendStartDistance);
-      double blend = t * t;
-      vx = vx * (1 - blend) + vxLookahead * blend;
-      vy = vy * (1 - blend) + vyLookahead * blend;
-      targetHeading = target.getRotation().interpolate(lookaheadPose.getRotation(), blend);
-      Logger.recordOutput("Drive/ToPose/blend", blend);
-    }
 
     double omega =
         MathUtil.clamp(
