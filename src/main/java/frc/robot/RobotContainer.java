@@ -53,7 +53,7 @@ public class RobotContainer {
                     TunerConstants.BackRight));
         spindexer = new Spindexer(new SpindexerIO() {});
         intake = new Intake(new IntakeIO() {});
-        azimuth = new Azimuth(new AzimuthIOSim());
+        azimuth = new Azimuth(new AzimuthIOSim(TurretConstants.azimuthMotorId, TurretConstants.azimuthEncoderId));
         hood = new Hood(new HoodIO() {});
         launcher = new Launcher(new LauncherIO() {});
         vision = new Vision(new VisionIO() {});
