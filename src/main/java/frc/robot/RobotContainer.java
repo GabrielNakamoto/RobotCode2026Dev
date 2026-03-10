@@ -53,7 +53,7 @@ public class RobotContainer {
                     TunerConstants.BackRight));
         spindexer = new Spindexer(new SpindexerIO() {});
         intake = new Intake(new IntakeIO() {});
-        azimuth = new Azimuth(new AzimuthIO() {});
+        azimuth = new Azimuth(new AzimuthIOSim());
         hood = new Hood(new HoodIO() {});
         launcher = new Launcher(new LauncherIO() {});
         vision = new Vision(new VisionIO() {});
@@ -103,7 +103,8 @@ public class RobotContainer {
     PhoenixSync.optimizeAll();
 
     autoChooser = new LoggedDashboardChooser<>("auto choices");
-    autoChooser.addDefaultOption("doubleSwipe", AutoBuilder.doubleSwipe(drive, superStructure));
+    autoChooser.addDefaultOption(
+        "doubleSwipe", AutoBuilder.doubleSwipeTestAuto(drive, superStructure));
 
     configureBindings();
   }
@@ -127,9 +128,16 @@ public class RobotContainer {
         edu.wpi.first.math.util.Units.inchesToMeters(3.0),
         RobotState.getInstance()::getSimulatedPose,
         RobotState.getInstance()::getFieldVelocity);
-
+    fuelSim.registerIntake(
+        RobotConfig.bumperWidthX.in(Units.Meters),
+        RobotConfig.bumperWidthX.plus(Units.Inches.of(10.0)).in(Units.Meters),
+        -RobotConfig.bumperWidthY.in(Units.Meters),
+        RobotConfig.bumperWidthY.in(Units.Meters),
+        () -> superStructure.isIntaking());
     fuelSim.enableAirResistance();
     fuelSim.start();
+
+    RobotState.getInstance().registerFuelSim(fuelSim);
   }
 
   public Command getAutonomousCommand() {

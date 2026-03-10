@@ -2,8 +2,15 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.*;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.RobotConfig;
+import frc.robot.RobotConfig.OperationMode;
+import frc.robot.RobotConfig.TurretConstants;
 import frc.robot.RobotConfig.TurretTarget;
 import frc.robot.RobotState;
 import frc.robot.RobotState.TurretState;
@@ -29,6 +36,7 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
   private final Launcher launcher;
   private final Intake intake;
   private TurretTarget target;
+  private Timer simShotTimer = new Timer();
 
   public SuperStructure(
       Spindexer spindexer, Hood hood, Azimuth azimuth, Launcher launcher, Intake intake) {
@@ -40,12 +48,17 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
     this.intake = intake;
 
     setState(SuperStructureState.IDLE);
+    simShotTimer.start();
   }
 
   @Override
   public void periodic() {
 
     applyState();
+  }
+
+  public boolean isIntaking() {
+    return getCurrentState() == SuperStructureState.INTAKE;
   }
 
   public Command setTarget(TurretTarget target) {
@@ -66,6 +79,31 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
 
   public Command unjam() {
     return Commands.runOnce(() -> setState(SuperStructureState.UNJAM));
+  }
+
+  private void simulateTurretShot(TurretState params) {
+    if (simShotTimer.get() > 0.25) {
+      Pose2d robotPose = RobotState.getInstance().getSimulatedPose();
+      Translation3d pos =
+          new Pose3d(robotPose).transformBy(TurretConstants.robotToTurret).getTranslation();
+      double launchSpeedMps =
+          params.launcherSpeed().in(RadiansPerSecond)
+              * TurretConstants.launcherWheelRadius.in(Meters);
+
+      // Calculate velocity components: hoodAngle=0 is horizontal, 90 deg is straight up
+      double hoodAngleRad = Degrees.of(90).minus(params.hoodAngle()).in(Radians);
+      double horizontalVel = Math.cos(hoodAngleRad) * launchSpeedMps;
+      double verticalVel = Math.sin(hoodAngleRad) * launchSpeedMps;
+
+      // Field-relative yaw = robot rotation + turret azimuth
+      double fieldYawRad = robotPose.getRotation().getRadians() + params.azimuthAngle().in(Radians);
+      double xVel = horizontalVel * Math.cos(fieldYawRad);
+      double yVel = horizontalVel * Math.sin(fieldYawRad);
+
+      Translation3d shotVector = new Translation3d(xVel, yVel, verticalVel);
+      RobotState.getInstance().getFuelSim().spawnFuel(pos, shotVector);
+      simShotTimer.restart();
+    }
   }
 
   @Override
@@ -94,6 +132,7 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
         spindexer.reverse();
         break;
       case SHOOT:
+        if (RobotConfig.getMode() == OperationMode.SIM) simulateTurretShot(turretParams);
         // launcher.setVoltage(turretParams.launchVoltage());
         launcher.setSpeed(turretParams.launcherSpeed());
         /*

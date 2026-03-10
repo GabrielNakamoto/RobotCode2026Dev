@@ -116,6 +116,8 @@ public class RobotConfig {
     public static final double azimuthGearRatio = 42.0;
     public static final double launcherGearRatio = 2.25;
 
+    public static final Distance launcherWheelRadius = Inches.of(2.0);
+
     public static final PIDGains hoodGains = new PIDGains(180.0, 0.0, 0.0);
     public static final PIDGains azimuthGains = new PIDGains(100.0, 0.0, 5.0);
     public static final PIDGains shootGains = new PIDGains(0.75, 0.0, 0.0);
@@ -161,5 +163,6 @@ public class RobotConfig {
 
   public static final class SimConstants {
     public static final double drivetrainSimLoopPeriod = 0.005; // 5ms
+    public static final double azimuthMOI = 0.025; // kg*m², turret moment of inertia
   }
 }

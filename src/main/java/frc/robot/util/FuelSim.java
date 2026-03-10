@@ -18,6 +18,7 @@ import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
+import edu.wpi.first.wpilibj.Timer;
 import java.util.ArrayList;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
@@ -281,13 +282,14 @@ public class FuelSim {
   @SuppressWarnings("unchecked")
   protected final ArrayList<Fuel>[][] grid = new ArrayList[GRID_COLS][GRID_ROWS];
 
+  private final ArrayList<ArrayList<Fuel>> activeCells = new ArrayList<>();
+
   protected void handleFuelCollisions(ArrayList<Fuel> fuels) {
     // Clear grid
-    for (int i = 0; i < GRID_COLS; i++) {
-      for (int j = 0; j < GRID_ROWS; j++) {
-        grid[i][j].clear();
-      }
+    for (ArrayList<Fuel> cell : activeCells) {
+      cell.clear();
     }
+    activeCells.clear();
 
     // Populate grid
     for (Fuel fuel : fuels) {
@@ -296,6 +298,9 @@ public class FuelSim {
 
       if (col >= 0 && col < GRID_COLS && row >= 0 && row < GRID_ROWS) {
         grid[col][row].add(fuel);
+        if (grid[col][row].size() == 1) {
+          activeCells.add(grid[col][row]);
+        }
       }
     }
 
@@ -331,6 +336,8 @@ public class FuelSim {
   protected double bumperHeight;
   protected ArrayList<SimIntake> intakes = new ArrayList<>();
   protected int subticks = 5;
+  protected double loggingFreqHz = 10;
+  protected Timer loggingTimer = new Timer();
 
   /**
    * Creates a new instance of FuelSim
@@ -422,11 +429,13 @@ public class FuelSim {
   /** Start the simulation. `updateSim` must still be called every loop */
   public void start() {
     running = true;
+    loggingTimer.restart();
   }
 
   /** Pause the simulation. */
   public void stop() {
     running = false;
+    loggingTimer.stop();
   }
 
   /** Enables accounting for drag force in physics step * */
@@ -437,10 +446,20 @@ public class FuelSim {
   /**
    * Sets the number of physics iterations per loop (0.02s)
    *
-   * @param subticks
+   * @param subticks physics iteration per loop (default: 5)
    */
   public void setSubticks(int subticks) {
     this.subticks = subticks;
+  }
+
+  /**
+   * Sets the frequency to publish fuel translations to NetworkTables Used to improve performance in
+   * AdvantageScope
+   *
+   * @param loggingFreqHz update frequency in hertz
+   */
+  public void setLoggingFrequency(double loggingFreqHz) {
+    this.loggingFreqHz = loggingFreqHz;
   }
 
   /**
@@ -509,7 +528,9 @@ public class FuelSim {
       }
     }
 
-    logFuels();
+    if (loggingTimer.advanceIfElapsed(1.0 / loggingFreqHz)) {
+      logFuels();
+    }
   }
 
   /**

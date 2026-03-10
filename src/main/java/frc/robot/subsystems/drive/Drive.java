@@ -173,6 +173,7 @@ public class Drive extends StateSubsystem<DriveState> {
         if (choreoTrajectory.isPresent()) {
           Logger.recordOutput("Drive/Choreo/trajectoryName", choreoTrajectory.get().name());
           Logger.recordOutput("Drive/Choreo/timer", choreoTimer.get());
+          Logger.recordOutput("Drive/Choreo/trajectoryTime", choreoTrajectory.get().getTotalTime());
           Optional<SwerveSample> sample =
               choreoTrajectory.get().sampleAt(choreoTimer.get(), !FieldConstants.isBlueAlliance());
           if (sample.isPresent()) {
@@ -221,8 +222,10 @@ public class Drive extends StateSubsystem<DriveState> {
     double headingErr = robotPose.getRotation().minus(finalPose.getRotation()).getDegrees();
     Logger.recordOutput("Drive/Choreo/linearError", linearErr);
     Logger.recordOutput("Drive/Choreo/headingErr", headingErr);
-    return choreoTimer.get() - choreoTrajectory.get().getTotalTime() > 0.25
-        || (linearErr < Units.inchesToMeters(8.0) && headingErr < 5.0);
+    return choreoTimer.get() - choreoTrajectory.get().getTotalTime() > 0.0;
+    /*
+    return choreoTimer.get() - choreoTrajectory.get().getTotalTime() > -0.25
+        & (linearErr < Units.inchesToMeters(8.0) && headingErr < 5.0);*/
   }
 
   public boolean atDriveToPoseSetpoint() {

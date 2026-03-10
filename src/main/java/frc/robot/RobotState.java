@@ -21,6 +21,7 @@ import frc.robot.RobotConfig.TurretConstants;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveIOInputsAutoLogged;
 import frc.robot.util.AllianceFlip;
+import frc.robot.util.FuelSim;
 import frc.robot.util.LoggedTunableNumber;
 import java.util.List;
 import java.util.function.Supplier;
@@ -65,6 +66,7 @@ public class RobotState {
     launcherSpeedMap.put(4.0, 34.5);
   }
 
+  private FuelSim fuelSim;
   private Supplier<Pose2d> simulatedDrivePoseSupplier = () -> Pose2d.kZero;
   private Drive drive;
   private DriveIOInputsAutoLogged driveInputs;
@@ -84,6 +86,10 @@ public class RobotState {
 
   public void registerDrivetrain(Drive drive) {
     this.drive = drive;
+  }
+
+  public void registerFuelSim(FuelSim fuelSim) {
+    this.fuelSim = fuelSim;
   }
 
   public void registerSimPoseSupplier(Supplier<Pose2d> supplier) {
@@ -108,6 +114,10 @@ public class RobotState {
 
   public ChassisSpeeds getFieldVelocity() {
     return ChassisSpeeds.fromRobotRelativeSpeeds(driveInputs.Speeds, driveInputs.gyroYaw);
+  }
+
+  public FuelSim getFuelSim() {
+    return fuelSim;
   }
 
   @AutoLogOutput(key = "RobotState/estimatedPose")
