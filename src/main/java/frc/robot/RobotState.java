@@ -142,9 +142,17 @@ public class RobotState {
             FieldConstants.aprilLayout.getTags().stream()
                 .map(tag -> AllianceFlip.apply(tag.pose.toPose2d()))
                 .toList();
-        Translation2d nearestTag = getEstimatedPose().nearest(tagPoses).getTranslation();
+        Pose2d robotPose = getEstimatedPose();
+        Translation2d nearestTag = robotPose.nearest(tagPoses).getTranslation();
+        Logger.recordOutput("RobotState/tracking/nearestTag", robotPose.nearest(tagPoses));
         return new TurretState(
-            getMotionAdjustedAzimuth(nearestTag), Radians.of(0), RotationsPerSecond.of(0.0));
+            nearestTag
+                .minus(robotPose.getTranslation())
+                .getAngle()
+                .minus(driveInputs.gyroYaw)
+                .getMeasure(),
+            Radians.of(0),
+            RotationsPerSecond.of(0.0));
       case PASSING: // TODO: implement
       default:
         return new TurretState(Radians.of(0), Radians.of(0), RotationsPerSecond.of(0.0));
@@ -168,18 +176,6 @@ public class RobotState {
         azimuth.getMeasure(),
         Degrees.of(hoodAngleTuning.getAsDouble()),
         RotationsPerSecond.of(launcherSpeedTuning.getAsDouble()));*/
-  }
-
-  public Angle getMotionAdjustedAzimuth(Translation2d target) {
-    Pose2d robotPose = getEstimatedPose();
-    Transform3d robotToTurret = TurretConstants.robotToTurret;
-    Translation2d turret =
-        new Pose3d(robotPose).transformBy(robotToTurret).toPose2d().getTranslation();
-    Translation2d turretToFieldVelocity =
-        rigidPointVelocity(driveInputs.Speeds, robotToTurret.getTranslation().toTranslation2d())
-            .rotateBy(driveInputs.gyroYaw);
-    turret = turret.plus(turretToFieldVelocity.times(TurretConstants.azimuthLatencyCompensation));
-    return target.minus(turret).getAngle().minus(driveInputs.gyroYaw).getMeasure();
   }
 
   @Deprecated

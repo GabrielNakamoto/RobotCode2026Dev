@@ -105,14 +105,16 @@ public class Drive extends StateSubsystem<DriveState> {
 
   public Command driveToPoseCommand(Pose2d target) {
     return Commands.runOnce(() -> this.driveToPose(target))
-        .andThen(Commands.waitUntil(() -> atDriveToPoseSetpoint()));
+        .andThen(Commands.waitUntil(() -> atDriveToPoseSetpoint()))
+        .andThen(Commands.runOnce(this::setIdle));
   }
 
   public Command driveToPoseCommandDeferred(Supplier<Pose2d> target) {
     return Commands.defer(
         () ->
             Commands.runOnce(() -> this.driveToPose(target.get()))
-                .andThen(Commands.waitUntil(() -> atDriveToPoseSetpoint())),
+                .andThen(Commands.waitUntil(() -> atDriveToPoseSetpoint()))
+                .andThen(Commands.runOnce(this::setIdle)),
         Set.of(this));
   }
 

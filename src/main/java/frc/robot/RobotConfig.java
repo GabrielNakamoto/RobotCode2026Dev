@@ -28,6 +28,13 @@ public class RobotConfig {
     CONSTANT_FORWARD
   }
 
+  public enum SuperStructureState {
+    IDLE,
+    INTAKE,
+    SHOOT,
+    UNJAM
+  }
+
   public enum OperationMode {
     REAL,
     SIM,

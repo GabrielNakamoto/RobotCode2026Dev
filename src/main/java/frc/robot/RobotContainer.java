@@ -53,7 +53,9 @@ public class RobotContainer {
                     TunerConstants.BackRight));
         spindexer = new Spindexer(new SpindexerIO() {});
         intake = new Intake(new IntakeIO() {});
-        azimuth = new Azimuth(new AzimuthIOSim(TurretConstants.azimuthMotorId, TurretConstants.azimuthEncoderId));
+        azimuth =
+            new Azimuth(
+                new AzimuthIOSim(TurretConstants.azimuthMotorId, TurretConstants.azimuthEncoderId));
         hood = new Hood(new HoodIO() {});
         launcher = new Launcher(new LauncherIO() {});
         vision = new Vision(new VisionIO() {});
@@ -104,10 +106,10 @@ public class RobotContainer {
 
     autoChooser = new LoggedDashboardChooser<>("auto choices");
     autoChooser.addDefaultOption(
-        "double swipe cleanup", AutoBuilder.doubleSwipeCleanUp(drive, superStructure));
+        "double swipe cleanup", AutoBuilder.doubleSwipeCleanup(drive, superStructure));
     autoChooser.addOption(
         "double swipe and human station",
-        AutoBuilder.doubleSwipeAndHumanStation(drive, superStructure));
+        AutoBuilder.doubleSwipeHumanStation(drive, superStructure));
 
     configureBindings();
   }
