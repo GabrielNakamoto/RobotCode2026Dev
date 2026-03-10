@@ -24,7 +24,8 @@ public class AutoBuilder {
     TARGET_TRACK,
     DRIVE_TO_POSE,
     CHOREO_TRAJ,
-    WAIT
+    WAIT,
+    COMMAND
   }
 
   private final Drive drive;
@@ -35,6 +36,7 @@ public class AutoBuilder {
   private List<SuperStructureState> superStates = new ArrayList<>();
   private List<TurretTarget> turretTargets = new ArrayList<>();
   private List<Double> delays = new ArrayList<>();
+  private List<Command> miscCommands = new ArrayList<>();
 
   private List<NodeType> graph = new ArrayList<>();
 
@@ -96,10 +98,18 @@ public class AutoBuilder {
                 drive.followChoreoTrajectoryCommand(
                     (Trajectory<SwerveSample>)
                         Choreo.loadTrajectory(flippedTraj(trajectoryNames.get(ctxIndex))).get());
+            case COMMAND -> miscCommands.get(ctxIndex);
           });
       nodeFreqs[node.ordinal()] += 1;
     }
+    commands.add(Commands.runOnce(() -> RobotState.getInstance().captureRewind(20.0)));
     return Commands.sequence(commands.toArray(Command[]::new));
+  }
+
+  public AutoBuilder withCommand(Command command) {
+    graph.add(NodeType.COMMAND);
+    miscCommands.add(command);
+    return this;
   }
 
   public AutoBuilder withStateChange(SuperStructureState state) {
@@ -142,12 +152,20 @@ public class AutoBuilder {
       Drive drive, SuperStructure superStructure, boolean isRightSide) {
     return new AutoBuilder(drive, superStructure, isRightSide)
         .withStateChange(SuperStructureState.INTAKE)
+        .withCommand(
+            Commands.runOnce(() -> RobotState.getInstance().setVisionMeasurementsDisabled(true)))
         .withChoreoTraj("FullFuelSwipe")
+        .withCommand(
+            Commands.runOnce(() -> RobotState.getInstance().setVisionMeasurementsDisabled(false)))
         .withDriveToPoseAllianceAgnostic(new Pose2d(3.5784, 0.663, Rotation2d.kZero))
         .withStateChange(SuperStructureState.SHOOT)
         .withDelay(2.0)
         .withStateChange(SuperStructureState.INTAKE)
+        .withCommand(
+            Commands.runOnce(() -> RobotState.getInstance().setVisionMeasurementsDisabled(true)))
         .withChoreoTraj("CleanSwipe")
+        .withCommand(
+            Commands.runOnce(() -> RobotState.getInstance().setVisionMeasurementsDisabled(false)))
         .withDriveToPoseAllianceAgnostic(new Pose2d(3.5784, 0.663, Rotation2d.k180deg))
         .withStateChange(SuperStructureState.SHOOT)
         .generate();

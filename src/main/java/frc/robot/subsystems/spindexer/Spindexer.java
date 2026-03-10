@@ -6,6 +6,8 @@ import frc.robot.subsystems.spindexer.SpindexerIO.SpindexerIOOutputs;
 import frc.robot.util.StateSubsystem;
 import org.littletonrobotics.junction.Logger;
 
+import edu.wpi.first.wpilibj.Timer;
+
 enum SpindexerState {
   HOLD,
   FEED,
@@ -25,9 +27,11 @@ public class Spindexer extends StateSubsystem<SpindexerState> {
   @Override
   public void periodic() {
     io.updateInputs(inputs);
-    Logger.processInputs("Superstructure/Spindexer", inputs);
+    Logger.processInputs("Spindexer", inputs);
 
     applyState();
+
+		Logger.recordOutput("Spindexer/state", getCurrentState());
     io.applyOutputs(outputs);
   }
 
@@ -43,8 +47,16 @@ public class Spindexer extends StateSubsystem<SpindexerState> {
     setState(SpindexerState.REVERSE);
   }
 
+	private boolean isStalled() {
+		return inputs.feedMotorVelocity.abs(RPM) < 1.0 || inputs.indexMotorVelocity.abs(RPM) < 1.0;
+	}
+
   @Override
   public void applyState() {
+    if (getCurrentState() == SpindexerState.FEED && isStalled()) {
+      setState(SpindexerState.REVERSE);
+    }
+
     switch (getCurrentState()) {
       case HOLD:
         outputs.indexMotorVoltage = Volts.zero();

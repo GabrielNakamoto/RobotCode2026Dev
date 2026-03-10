@@ -155,7 +155,7 @@ public class RobotConfig {
                 new Transform3d(Translation3d.kZero, TurretConstants.cameraRotation)));
 
     public static final List<Integer> hubTags = List.of(9, 10, 25, 26);
-    public static final boolean rewindEnabled = false;
+    public static final boolean rewindEnabled = true;
 
     // Hybrid stddev tuning
     public static final double baseStddevMultiplier = 1.0;

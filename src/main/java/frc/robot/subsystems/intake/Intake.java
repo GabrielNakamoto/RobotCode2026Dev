@@ -71,12 +71,15 @@ public class Intake extends StateSubsystem<IntakeState> {
             agitatingForward
                 ? inputs.extendPosition.lt(IntakeConstants.agitateOutDist)
                 : inputs.extendPosition.lt(IntakeConstants.agitateInDist);
-        outputs.intakeVoltage = Volts.of(-8.0);
+        outputs.intakeVoltage = Volts.of(2.0);
         break;
     }
 
+    /*
     if (inputs.extendPosition.lt(IntakeConstants.maxRetraction.plus(Inches.of(0.25)))) {
       outputs.intakeVoltage = Volts.of(0.0);
-    }
+    }*/
+
+    outputs.extendVoltage = Volts.of(0.0);
   }
 }

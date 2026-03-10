@@ -24,6 +24,8 @@ import frc.robot.util.AllianceFlip;
 import frc.robot.util.FuelSim;
 import frc.robot.util.LoggedTunableNumber;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.DoubleConsumer;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.AutoLogOutputManager;
@@ -34,20 +36,17 @@ public class RobotState {
       new InterpolatingTreeMap<>(InverseInterpolator.forDouble(), Rotation2d::interpolate);
   private static final InterpolatingDoubleTreeMap launcherSpeedMap =
       new InterpolatingDoubleTreeMap();
-  /*
-  private static final InterpolatingDoubleTreeMap launcherVoltageMap =
-      new InterpolatingDoubleTreeMap();*/
   private static final InterpolatingDoubleTreeMap timeOfFlightMap =
       new InterpolatingDoubleTreeMap();
 
   private LoggedTunableNumber hoodAngleTuning = new LoggedTunableNumber("hoodAngleDegrees", 0.0);
-  /*
-  private LoggedTunableNumber launcherVoltageTuning =
-      new LoggedTunableNumber("launcherVoltage", 12.0);*/
   private LoggedTunableNumber launcherSpeedTuning = new LoggedTunableNumber("launcherSpeed", 20.0);
 
   private static final int kMaxIterations = 10;
   private static final double kConvergenceEpsilon = 0.001;
+
+  private boolean visionMeasurementsDisabled = false;
+  private Optional<DoubleConsumer> captureRewind = Optional.empty();
 
   static {
     hoodAngleMap.put(2.0, Rotation2d.fromDegrees(6.0));
@@ -62,11 +61,16 @@ public class RobotState {
     hoodAngleMap.put(3.5, Rotation2d.fromDegrees(10.0));
     launcherSpeedMap.put(3.5, 32.0);
 
+    hoodAngleMap.put(3.7, Rotation2d.fromDegrees(11.5));
+    launcherSpeedMap.put(3.7, 33.0);
+
     hoodAngleMap.put(4.0, Rotation2d.fromDegrees(9.75));
     launcherSpeedMap.put(4.0, 34.5);
   }
 
   private FuelSim fuelSim;
+  private int fuelInHopper = 0;
+
   private Supplier<Pose2d> simulatedDrivePoseSupplier = () -> Pose2d.kZero;
   private Drive drive;
   private DriveIOInputsAutoLogged driveInputs;
@@ -96,6 +100,19 @@ public class RobotState {
     simulatedDrivePoseSupplier = supplier;
   }
 
+  public void registerRewindCallback(DoubleConsumer callback) {
+    captureRewind = Optional.of(callback);
+  }
+
+  public void captureRewind(double duration) {
+    captureRewind.ifPresent(capture -> capture.accept(duration));
+  }
+
+  public void setVisionMeasurementsDisabled(boolean set) {
+    visionMeasurementsDisabled = set;
+    Logger.recordOutput("RobotState/visionMeasurementsDisabled", visionMeasurementsDisabled);
+  }
+
   public void resetOdometry(Pose2d pose) {
     if (drive != null) {
       drive.resetOdometry(pose);
@@ -103,7 +120,7 @@ public class RobotState {
   }
 
   public void addVisionMeasurement(VisionObservation estimate) {
-    if (drive != null) {
+    if (drive != null && !visionMeasurementsDisabled) {
       drive.addVisionMeasurement(estimate);
     }
   }
@@ -120,6 +137,18 @@ public class RobotState {
     return fuelSim;
   }
 
+  public void addFuel() {
+    fuelInHopper += 1;
+    Logger.recordOutput("RobotState/simFuelCount", fuelInHopper);
+  }
+
+  public boolean consumeFuel() {
+    boolean hasFuel = fuelInHopper > 0;
+    if (hasFuel) fuelInHopper -= 1;
+    Logger.recordOutput("RobotState/simFuelCount", fuelInHopper);
+    return hasFuel;
+  }
+
   @AutoLogOutput(key = "RobotState/estimatedPose")
   public Pose2d getEstimatedPose() {
     return new Pose2d(driveInputs.Pose.getTranslation(), driveInputs.gyroYaw);
@@ -130,6 +159,7 @@ public class RobotState {
   }
 
   public TurretState resolveTurretTargetting(RobotConfig.TurretTarget target) {
+    Logger.recordOutput("Tuning/hubPose", FieldConstants.Hub.getTopCenter());
     switch (target) {
       case HUB:
         return getShootOnTheMoveTurretSetpoint();
@@ -242,5 +272,4 @@ public class RobotState {
   }
 
   public record TurretState(Angle azimuthAngle, Angle hoodAngle, AngularVelocity launcherSpeed) {}
-  // public record TurretState(Angle azimuthAngle, Angle hoodAngle, double launchVoltage) {}
 }

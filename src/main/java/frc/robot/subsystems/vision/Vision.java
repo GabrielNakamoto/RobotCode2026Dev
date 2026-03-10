@@ -31,6 +31,7 @@ public class Vision extends SubsystemBase {
       this.configs[i] = cameras[i].getConfig();
       this.inputs[i] = new VisionIOInputsAutoLogged();
     }
+    RobotState.getInstance().registerRewindCallback(this::captureRewind);
   }
 
   @Override

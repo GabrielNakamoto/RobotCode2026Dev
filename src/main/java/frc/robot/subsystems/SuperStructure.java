@@ -24,13 +24,14 @@ import frc.robot.util.StateSubsystem;
 import org.littletonrobotics.junction.Logger;
 
 public class SuperStructure extends StateSubsystem<SuperStructureState> {
+  private Timer simShotTimer = new Timer();
+
   private final Spindexer spindexer;
   private final Hood hood;
   private final Azimuth azimuth;
   private final Launcher launcher;
   private final Intake intake;
   private TurretTarget target;
-  private Timer simShotTimer = new Timer();
 
   public SuperStructure(
       Spindexer spindexer, Hood hood, Azimuth azimuth, Launcher launcher, Intake intake) {
@@ -76,7 +77,7 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
   }
 
   private void simulateTurretShot(TurretState params) {
-    if (simShotTimer.get() > 0.25) {
+    if (simShotTimer.get() > 0.25 && RobotState.getInstance().consumeFuel()) {
       Pose2d robotPose = RobotState.getInstance().getSimulatedPose();
       Translation3d pos =
           new Pose3d(robotPose).transformBy(TurretConstants.robotToTurret).getTranslation();

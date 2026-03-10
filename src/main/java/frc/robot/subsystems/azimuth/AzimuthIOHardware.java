@@ -45,9 +45,9 @@ public class AzimuthIOHardware implements AzimuthIO {
         .withSensorToMechanismRatio(1.0)
         .withRotorToSensorRatio(TurretConstants.azimuthGearRatio);
     config.SoftwareLimitSwitch.withForwardSoftLimitEnable(true)
-        .withForwardSoftLimitThreshold(0.5)
+        .withForwardSoftLimitThreshold(0.569)
         .withReverseSoftLimitEnable(true)
-        .withReverseSoftLimitThreshold(-0.5);
+        .withReverseSoftLimitThreshold(-0.569);
     motor.getConfigurator().apply(config);
 
     this.signals = PhoenixSync.registerTalonFX(motor, 150);

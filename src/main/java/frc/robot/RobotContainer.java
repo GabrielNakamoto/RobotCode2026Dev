@@ -104,14 +104,13 @@ public class RobotContainer {
     superStructure = new SuperStructure(spindexer, hood, azimuth, launcher, intake);
     PhoenixSync.optimizeAll();
 
-    autoChooser = new LoggedDashboardChooser<>("auto choices");
+    autoChooser = new LoggedDashboardChooser<>("Auto Routine");
     autoChooser.addDefaultOption(
         "doubleSwipeCleanupRight", AutoBuilder.doubleSwipeCleanup(drive, superStructure, true));
-    autoChooser.addDefaultOption(
+    autoChooser.addOption(
         "doubleSwipeCleanupLeft", AutoBuilder.doubleSwipeCleanup(drive, superStructure, false));
     autoChooser.addOption(
-        "double swipe and human station",
-        AutoBuilder.doubleSwipeHumanStation(drive, superStructure));
+        "doubleSwipeHumanStation", AutoBuilder.doubleSwipeHumanStation(drive, superStructure));
 
     configureBindings();
   }
@@ -140,7 +139,8 @@ public class RobotContainer {
         RobotConfig.bumperWidthX.plus(Units.Inches.of(10.0)).in(Units.Meters),
         -RobotConfig.bumperWidthY.in(Units.Meters),
         RobotConfig.bumperWidthY.in(Units.Meters),
-        () -> superStructure.isIntaking());
+        () -> superStructure.isIntaking(),
+        RobotState.getInstance()::addFuel);
     fuelSim.enableAirResistance();
     fuelSim.start();
 
