@@ -29,6 +29,8 @@ import frc.robot.RobotState;
 import frc.robot.RobotState.*;
 import frc.robot.util.StateSubsystem;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 
 enum DriveState {
@@ -104,6 +106,14 @@ public class Drive extends StateSubsystem<DriveState> {
   public Command driveToPoseCommand(Pose2d target) {
     return Commands.runOnce(() -> this.driveToPose(target))
         .andThen(Commands.waitUntil(() -> atDriveToPoseSetpoint()));
+  }
+
+  public Command driveToPoseCommandDeferred(Supplier<Pose2d> target) {
+    return Commands.defer(
+        () ->
+            Commands.runOnce(() -> this.driveToPose(target.get()))
+                .andThen(Commands.waitUntil(() -> atDriveToPoseSetpoint())),
+        Set.of(this));
   }
 
   public void driveToPose(Pose2d target) {

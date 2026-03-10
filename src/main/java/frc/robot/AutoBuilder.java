@@ -37,7 +37,7 @@ public class AutoBuilder {
         );
   }
 
-  public static Command doubleSwipeTestAuto(Drive drive, SuperStructure superStructure) {
+  public static Command doubleSwipeCleanUp(Drive drive, SuperStructure superStructure) {
     return Commands.sequence(
         Commands.runOnce(
             () ->
@@ -58,5 +58,32 @@ public class AutoBuilder {
         superStructure.shoot(),
         Commands.waitSeconds(2.0),
         superStructure.idle());
+  }
+
+  public static Command doubleSwipeAndHumanStation(Drive drive, SuperStructure superStructure) {
+    return Commands.sequence(
+        Commands.runOnce(
+            () ->
+                RobotState.getInstance()
+                    .resetOdometry(
+                        autoTrajectories
+                            .get("FullFuelSwipe")
+                            .getInitialPose(!FieldConstants.isBlueAlliance())
+                            .get())),
+        Commands.defer(
+            () -> fuelSwipeFull("FullFuelSwipe", Rotation2d.kZero, drive, superStructure),
+            Set.of(drive, superStructure)),
+        superStructure.shoot(),
+        Commands.waitSeconds(2.0),
+        Commands.defer(
+            () -> fuelSwipeFull("CleanSwipe", Rotation2d.k180deg, drive, superStructure),
+            Set.of(drive, superStructure)),
+        superStructure.shoot(),
+        Commands.waitSeconds(1.0),
+        drive.driveToPoseCommandDeferred(() -> FieldConstants.getHumanStation()),
+        Commands.waitSeconds(0.8),
+        drive.driveToPoseCommandDeferred(
+            () -> AllianceFlip.apply(new Pose2d(1.75, 1.75, Rotation2d.kZero))),
+        Commands.runOnce(() -> drive.setIdle()));
   }
 }

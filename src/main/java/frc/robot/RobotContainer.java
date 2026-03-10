@@ -104,7 +104,10 @@ public class RobotContainer {
 
     autoChooser = new LoggedDashboardChooser<>("auto choices");
     autoChooser.addDefaultOption(
-        "doubleSwipe", AutoBuilder.doubleSwipeTestAuto(drive, superStructure));
+        "double swipe cleanup", AutoBuilder.doubleSwipeCleanUp(drive, superStructure));
+    autoChooser.addOption(
+        "double swipe and human station",
+        AutoBuilder.doubleSwipeAndHumanStation(drive, superStructure));
 
     configureBindings();
   }
