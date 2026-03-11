@@ -46,7 +46,7 @@ public class Spindexer extends StateSubsystem<SpindexerState> {
   }
 
   private boolean isStalled() {
-    return inputs.feedMotorVelocity.abs(RPM) < 1.0 || inputs.indexMotorVelocity.abs(RPM) < 1.0;
+    return inputs.feedMotorVelocity.abs(RPM) < 1.75 || inputs.indexMotorVelocity.abs(RPM) < 1.75;
   }
 
   @Override
@@ -61,7 +61,7 @@ public class Spindexer extends StateSubsystem<SpindexerState> {
         outputs.feedMotorVoltage = Volts.zero();
         break;
       case FEED:
-        outputs.indexMotorVoltage = Volts.of(3.0);
+        outputs.indexMotorVoltage = Volts.of(2.0);
         outputs.feedMotorVoltage = Volts.of(4.0);
         break;
       case REVERSE:

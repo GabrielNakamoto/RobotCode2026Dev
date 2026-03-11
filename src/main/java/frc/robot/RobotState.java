@@ -49,28 +49,31 @@ public class RobotState {
   private Optional<DoubleConsumer> captureRewind = Optional.empty();
 
   static {
+    hoodAngleMap.put(1.5, Rotation2d.fromDegrees(2.0));
     hoodAngleMap.put(2.0, Rotation2d.fromDegrees(6.0));
-    launcherSpeedMap.put(2.0, 27.5);
-    timeOfFlightMap.put(2.0, 9.0 / 8.0);
-
     hoodAngleMap.put(2.6, Rotation2d.fromDegrees(7.2));
-    launcherSpeedMap.put(2.6, 30.0);
-    timeOfFlightMap.put(2.6, 9.5 / 8.0);
-
     hoodAngleMap.put(3.0, Rotation2d.fromDegrees(8.25));
-    launcherSpeedMap.put(3.0, 30.0);
-    timeOfFlightMap.put(3.0, 9.5 / 8.0);
-
     hoodAngleMap.put(3.5, Rotation2d.fromDegrees(10.0));
-    launcherSpeedMap.put(3.5, 32.0);
-    timeOfFlightMap.put(3.5, 1.0);
-
     hoodAngleMap.put(3.7, Rotation2d.fromDegrees(11.5));
-    launcherSpeedMap.put(3.7, 33.0);
-    timeOfFlightMap.put(3.7, 7.0 / 8.0);
-
     hoodAngleMap.put(4.0, Rotation2d.fromDegrees(9.75));
+    hoodAngleMap.put(4.5, Rotation2d.fromDegrees(15));
+    hoodAngleMap.put(5.2, Rotation2d.fromDegrees(18));
+
+    launcherSpeedMap.put(1.5, 28.0);
+    launcherSpeedMap.put(2.0, 27.5);
+    launcherSpeedMap.put(2.6, 30.0);
+    launcherSpeedMap.put(3.0, 30.0);
+    launcherSpeedMap.put(3.5, 32.0);
+    launcherSpeedMap.put(3.7, 33.0);
     launcherSpeedMap.put(4.0, 34.5);
+    launcherSpeedMap.put(4.5, 34.0);
+    launcherSpeedMap.put(5.2, 40.0);
+
+    timeOfFlightMap.put(2.0, 9.0 / 8.0);
+    timeOfFlightMap.put(2.6, 9.5 / 8.0);
+    timeOfFlightMap.put(3.0, 9.5 / 8.0);
+    timeOfFlightMap.put(3.5, 1.0);
+    timeOfFlightMap.put(3.7, 7.0 / 8.0);
     timeOfFlightMap.put(4.0, 10.5 / 8.0);
   }
 
@@ -165,9 +168,13 @@ public class RobotState {
     Logger.recordOutput("Tuning/hubPose", FieldConstants.Hub.getTopCenter());
     switch (target) {
       case HUB:
-        return getShootOnTheMoveTurretSetpoint();
+        return getTurretSetpoint();
       case TUNING:
-        return turretTuning();
+        var setpoint = getTurretSetpoint();
+        return new TurretState(
+            setpoint.azimuthAngle(),
+            Degrees.of(hoodAngleTuning.getAsDouble()),
+            RotationsPerSecond.of(launcherSpeedTuning.getAsDouble()));
       case CONSTANT_FORWARD:
         return new TurretState(Radians.of(0.0), Radians.of(0.0), RadiansPerSecond.of(0.0));
       case NEAREST_TAG:
@@ -186,13 +193,13 @@ public class RobotState {
                 .getMeasure(),
             Radians.of(0),
             RotationsPerSecond.of(0.0));
-      case PASSING: // TODO: implement
+        // case PASSING: // TODO: implement
       default:
         return new TurretState(Radians.of(0), Radians.of(0), RotationsPerSecond.of(0.0));
     }
   }
 
-  public TurretState turretTuning() {
+  public TurretState getTurretSetpoint() {
     Pose2d robotPose = getEstimatedPose();
     Translation2d hubPosition = FieldConstants.Hub.getTopCenter().toTranslation2d();
     Rotation2d azimuth =
@@ -204,28 +211,6 @@ public class RobotState {
         azimuth.getMeasure(),
         hoodAngleMap.get(hubDistance).getMeasure(),
         RotationsPerSecond.of(launcherSpeedMap.get(hubDistance)));
-    /*return new TurretState(
-    azimuth.getMeasure(),
-    Degrees.of(hoodAngleTuning.getAsDouble()),
-    RotationsPerSecond.of(launcherSpeedTuning.getAsDouble()));*/
-  }
-
-  @Deprecated
-  public TurretState getTurretSetpoint() {
-    Pose2d robotPose = getEstimatedPose();
-    Translation2d target = FieldConstants.Hub.getTopCenter().toTranslation2d();
-    double distance = robotPose.getTranslation().getDistance(target);
-
-    Angle robotToTarget =
-        target
-            .minus(robotPose.getTranslation())
-            .getAngle()
-            .minus(robotPose.getRotation())
-            .getMeasure();
-    return new TurretState(
-        robotToTarget,
-        hoodAngleMap.get(distance).getMeasure(),
-        RotationsPerSecond.of(launcherSpeedMap.get(distance)));
   }
 
   // https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/dynamic-shooting.html

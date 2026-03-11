@@ -82,7 +82,7 @@ public class RobotConfig {
     public static final double toPoseThetaTolerance = Units.degreesToRadians(3.0);
     public static final double toPoseEndSpeed = 0.25;
 
-    public static final PIDGains trenchYGains = new PIDGains(2.75, 0.0, 0.0);
+    public static final PIDGains trenchYGains = new PIDGains(3.5, 0.0, 0.0);
 
     public static final PIDGains choreoXGains = new PIDGains(7.5, 0.0, 0.0);
     public static final PIDGains choreoYGains = new PIDGains(7.5, 0.0, 0.0);

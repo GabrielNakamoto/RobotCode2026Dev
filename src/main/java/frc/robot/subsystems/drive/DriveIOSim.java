@@ -39,8 +39,8 @@ public class DriveIOSim extends DriveIOHardware {
         new MapleSimSwerveDrivetrain(
             Units.Seconds.of(RobotConfig.SimConstants.drivetrainSimLoopPeriod),
             RobotConfig.robotMass,
-            RobotConfig.bumperWidthX,
-            RobotConfig.bumperWidthY,
+            RobotConfig.bumperWidthX.times(2),
+            RobotConfig.bumperWidthY.times(2),
             DCMotor.getKrakenX60(1),
             DCMotor.getKrakenX60(1),
             1.2,

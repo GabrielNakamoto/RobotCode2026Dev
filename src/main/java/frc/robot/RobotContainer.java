@@ -107,10 +107,8 @@ public class RobotContainer {
     autoChooser = new LoggedDashboardChooser<>("Auto Routine");
     autoChooser.addDefaultOption(
         "doubleSwipeCleanupRight", AutoBuilder.doubleSwipeCleanup(drive, superStructure, true));
-    autoChooser.addOption(
-        "doubleSwipeCleanupLeft", AutoBuilder.doubleSwipeCleanup(drive, superStructure, false));
     autoChooser.addOption("singleSwipeRight", AutoBuilder.singleSwipe(drive, superStructure, true));
-    autoChooser.addOption("singleSwipeLeft", AutoBuilder.singleSwipe(drive, superStructure, false));
+    autoChooser.addOption("swipAndDepot", AutoBuilder.swipeAndDepot(drive, superStructure));
     autoChooser.addOption(
         "doubleSwipeHumanStation", AutoBuilder.doubleSwipeHumanStation(drive, superStructure));
 
@@ -124,7 +122,11 @@ public class RobotContainer {
     driveController
         .b()
         .onTrue(superStructure.setTarget(TurretTarget.CONSTANT_FORWARD))
-        .onFalse(superStructure.setTarget(TurretTarget.TUNING));
+        .onFalse(superStructure.setTarget(TurretTarget.HUB));
+    driveController
+        .x()
+        .onTrue(superStructure.setTarget(TurretTarget.TUNING))
+        .onFalse(superStructure.setTarget(TurretTarget.HUB));
   }
 
   private void configureFuelSim() {

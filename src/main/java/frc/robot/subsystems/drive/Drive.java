@@ -178,17 +178,21 @@ public class Drive extends StateSubsystem<DriveState> {
                 .withVelocityX(speeds.get(0))
                 .withVelocityY(speeds.get(1))
                 .withRotationalRate(speeds.get(2)));
-        /*FieldConstants.Trench.triggerTrenchAlign()
-        .ifPresent(
-            pose -> {
-              trenchPose = pose;
-              setState(DriveState.TRENCH);
-            });*/
+        FieldConstants.Trench.triggerTrenchAlign()
+            .ifPresent(
+                pose -> {
+                  trenchPose = pose;
+                  setState(DriveState.TRENCH);
+                });
         break;
       case TRENCH:
         applyRequest(trenchRequest(robotPose));
-        double xError = trenchPose.getTranslation().minus(robotPose.getTranslation()).getX();
-        if (Math.abs(xError) < Units.inchesToMeters(15.0)) setState(DriveState.TELEOP);
+        // Exit trench when robot x has passed target x in direction of travel
+        double xVelocity = inputs.Speeds.vxMetersPerSecond;
+        boolean passedTarget =
+            (xVelocity > 0 && robotPose.getX() > trenchPose.getX())
+                || (xVelocity < 0 && robotPose.getX() < trenchPose.getX());
+        if (passedTarget) setState(DriveState.TELEOP);
         break;
       case CHOREO:
         if (choreoTrajectory.isPresent()) {

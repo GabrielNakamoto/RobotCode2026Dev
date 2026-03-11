@@ -27,7 +27,7 @@ public class AutoBuilder {
     CHOREO_TRAJ,
     WAIT,
     COMMAND,
-    CAPTURE_REWIND
+		CAPTURE_REWIND
   }
 
   private static Timer autoTimer = new Timer();
@@ -103,22 +103,21 @@ public class AutoBuilder {
                     (Trajectory<SwerveSample>)
                         Choreo.loadTrajectory(flippedTraj(trajectoryNames.get(ctxIndex))).get());
             case COMMAND -> miscCommands.get(ctxIndex);
-            case CAPTURE_REWIND ->
-                Commands.runOnce(
-                    () -> {
-                      double autoTime = autoTimer.get();
-                      RobotState.getInstance().captureRewind(autoTime);
-                    });
-          });
+					case CAPTURE_REWIND -> Commands.runOnce(
+            () -> {
+              double autoTime = autoTimer.get();
+              RobotState.getInstance().captureRewind(autoTime);
+            });
+			});
       nodeFreqs[node.ordinal()] += 1;
     }
     return Commands.sequence(commands.toArray(Command[]::new));
   }
 
-  public AutoBuilder captureRewind() {
-    graph.add(NodeType.CAPTURE_REWIND);
-    return this;
-  }
+	public AutoBuilder captureRewind() {
+		graph.add(NodeType.CAPTURE_REWIND);
+		return this;
+	}
 
   public AutoBuilder withCommand(Command command) {
     graph.add(NodeType.COMMAND);
@@ -191,9 +190,8 @@ public class AutoBuilder {
         .withChoreoTraj("DepotCycle")
         .withStateChange(SuperStructureState.SHOOT)
         .withDelayTillRemaining(1.0)
-        .captureRewind()
-        .withStateChange(SuperStructureState.IDLE)
-        .withChoreoTraj("ExitDepot")
+				.captureRewind()
+				.withChoreoTraj("ExitDepot")
         .generate();
   }
 
@@ -210,8 +208,7 @@ public class AutoBuilder {
         .withStateChange(SuperStructureState.SHOOT)
         .withDriveToPoseAllianceAgnostic(new Pose2d(3.5784, 0.663, Rotation2d.k180deg))
         .withDelayTillRemaining(1.0)
-        .captureRewind()
-        .withStateChange(SuperStructureState.IDLE)
+				.captureRewind()
         .withDriveToPoseAllianceAgnostic(new Pose2d(7.5784, 0.663, Rotation2d.k180deg))
         .generate();
   }

@@ -38,7 +38,7 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
 
   public SuperStructure(
       Spindexer spindexer, Hood hood, Azimuth azimuth, Launcher launcher, Intake intake) {
-    this.target = TurretTarget.TUNING;
+    this.target = TurretTarget.HUB;
     this.spindexer = spindexer;
     this.hood = hood;
     this.azimuth = azimuth;
