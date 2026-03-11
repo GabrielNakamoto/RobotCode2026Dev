@@ -178,16 +178,15 @@ public class Drive extends StateSubsystem<DriveState> {
                 .withVelocityX(speeds.get(0))
                 .withVelocityY(speeds.get(1))
                 .withRotationalRate(speeds.get(2)));
-        FieldConstants.Trench.triggerTrenchAlign()
-            .ifPresent(
-                pose -> {
-                  trenchPose = pose;
-                  setState(DriveState.TRENCH);
-                });
+        /*FieldConstants.Trench.triggerTrenchAlign()
+        .ifPresent(
+            pose -> {
+              trenchPose = pose;
+              setState(DriveState.TRENCH);
+            });*/
         break;
       case TRENCH:
         applyRequest(trenchRequest(robotPose));
-        // Exit trench when robot x has passed target x in direction of travel
         double xVelocity = inputs.Speeds.vxMetersPerSecond;
         boolean passedTarget =
             (xVelocity > 0 && robotPose.getX() > trenchPose.getX())
@@ -215,7 +214,6 @@ public class Drive extends StateSubsystem<DriveState> {
     }
   }
 
-  // Match requested x joystick with output y to align to center of trench
   private SwerveRequest trenchRequest(Pose2d robotPose) {
     Logger.recordOutput("Drive/TrenchAlign/alignPose", trenchPose);
     double xOutput = getInputVector().get(0);

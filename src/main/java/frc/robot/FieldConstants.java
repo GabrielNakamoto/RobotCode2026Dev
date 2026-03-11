@@ -93,42 +93,12 @@ public class FieldConstants {
             startingLineLengthX.plus(trenchWidthX).plus(RobotConfig.bumperWidthX), trenchCenter);
 
     public static Optional<Pose2d> triggerTrenchAlign() {
-      var speeds = RobotState.getInstance().getFieldVelocity();
-      double speed = Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
-      if (speed < 2.0) return Optional.empty();
+      // Conditions for trench align:
+      // 1. Within x and y range
+      // 2. Travelling a ceartain speed
+      // 3. Travelling in direction of trench
 
-      Pose2d robotPose = RobotState.getInstance().getEstimatedPose();
-      Pose2d trenchPose =
-          inNeutralZone(robotPose) ? getFarTrench(robotPose) : getCloseTrench(robotPose);
-      Translation2d robotToTrench = trenchPose.getTranslation().minus(robotPose.getTranslation());
-      double linearDist = robotToTrench.getNorm();
-
-      // Only trigger when within approach range (not too close, not too far)
-      if (linearDist > Units.inchesToMeters(48) || linearDist < Units.inchesToMeters(12))
-        return Optional.empty();
-
-      Translation2d speedVector =
-          new Translation2d(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
-
-      // Check robot is moving toward trench (dot product > 0 means moving toward)
-      double dotProduct =
-          speedVector.getX() * robotToTrench.getX() + speedVector.getY() * robotToTrench.getY();
-      if (dotProduct <= 0) return Optional.empty();
-
-      // Check travel direction aligns with direction to trench
-      Rotation2d directionToTrench = robotToTrench.getAngle();
-      Rotation2d travelDirection = speedVector.getAngle();
-      double travelError = travelDirection.minus(directionToTrench).getMeasure().abs(Degrees);
-      if (travelError > 60) return Optional.empty();
-
-      Rotation2d snapHeading =
-          Rotation2d.fromRadians(
-              Math.round(robotPose.getRotation().getRadians() / Math.PI) * Math.PI);
-      return Optional.of(
-          new Pose2d(
-              (inNeutralZone(robotPose) ? getCloseTrench(robotPose) : getFarTrench(robotPose))
-                  .getTranslation(),
-              snapHeading));
+      return Optional.empty();
     }
 
     private static List<Pose2d> resolve(Pose2d pose, Translation2d... ps) {
