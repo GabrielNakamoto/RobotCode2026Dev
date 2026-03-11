@@ -48,6 +48,7 @@ public class HoodIOHardware implements HoodIO {
     inputs.position = signals.getPosition();
   }
 
+  @Override
   public void setAngle(Angle angle) {
     Logger.recordOutput("Hood/setpoint", angle);
     motor.setControl(request.withPosition(angle));

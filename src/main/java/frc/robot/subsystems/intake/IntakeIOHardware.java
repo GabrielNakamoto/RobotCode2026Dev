@@ -39,7 +39,7 @@ public class IntakeIOHardware implements IntakeIO {
         intakeConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
 
     var extendConfig = new TalonFXConfiguration();
-    extendConfig.ClosedLoopRamps.withVoltageClosedLoopRampPeriod(0.3);
+    extendConfig.ClosedLoopRamps.withVoltageClosedLoopRampPeriod(0.45);
     extendConfig.Feedback.withSensorToMechanismRatio(IntakeConstants.extendGearRatio);
     extendConfig.MotorOutput.withNeutralMode(NeutralModeValue.Brake);
     extendConfig.withSlot0(IntakeConstants.extendGains.toSlot0Configs());

@@ -109,6 +109,8 @@ public class RobotContainer {
         "doubleSwipeCleanupRight", AutoBuilder.doubleSwipeCleanup(drive, superStructure, true));
     autoChooser.addOption(
         "doubleSwipeCleanupLeft", AutoBuilder.doubleSwipeCleanup(drive, superStructure, false));
+    autoChooser.addOption("singleSwipeRight", AutoBuilder.singleSwipe(drive, superStructure, true));
+    autoChooser.addOption("singleSwipeLeft", AutoBuilder.singleSwipe(drive, superStructure, false));
     autoChooser.addOption(
         "doubleSwipeHumanStation", AutoBuilder.doubleSwipeHumanStation(drive, superStructure));
 

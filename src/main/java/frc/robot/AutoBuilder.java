@@ -6,6 +6,7 @@ import choreo.trajectory.Trajectory;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.RobotConfig.SuperStructureState;
@@ -28,6 +29,7 @@ public class AutoBuilder {
     COMMAND
   }
 
+  private static Timer autoTimer = new Timer();
   private final Drive drive;
   private final SuperStructure superStructure;
 
@@ -83,6 +85,7 @@ public class AutoBuilder {
         Commands.defer(
             () -> Commands.runOnce(() -> RobotState.getInstance().resetOdometry(initialPose.get())),
             Set.of()));
+    commands.add(Commands.runOnce(() -> autoTimer.restart()));
     for (NodeType node : graph) {
       int ctxIndex = nodeFreqs[node.ordinal()];
       commands.add(
@@ -102,7 +105,12 @@ public class AutoBuilder {
           });
       nodeFreqs[node.ordinal()] += 1;
     }
-    commands.add(Commands.runOnce(() -> RobotState.getInstance().captureRewind(20.0)));
+    commands.add(
+        Commands.runOnce(
+            () -> {
+              double autoTime = autoTimer.get();
+              RobotState.getInstance().captureRewind(autoTime);
+            }));
     return Commands.sequence(commands.toArray(Command[]::new));
   }
 
@@ -148,26 +156,28 @@ public class AutoBuilder {
     return this;
   }
 
+  public static Command singleSwipe(
+      Drive drive, SuperStructure superStructure, boolean isRightSide) {
+    return new AutoBuilder(drive, superStructure, isRightSide)
+        .withStateChange(SuperStructureState.INTAKE)
+        .withChoreoTraj("FullFuelSwipe")
+        .withStateChange(SuperStructureState.SHOOT)
+        .withDriveToPoseAllianceAgnostic(new Pose2d(3.5784, 0.663, Rotation2d.kZero))
+        .generate();
+  }
+
   public static Command doubleSwipeCleanup(
       Drive drive, SuperStructure superStructure, boolean isRightSide) {
     return new AutoBuilder(drive, superStructure, isRightSide)
         .withStateChange(SuperStructureState.INTAKE)
-        .withCommand(
-            Commands.runOnce(() -> RobotState.getInstance().setVisionMeasurementsDisabled(true)))
         .withChoreoTraj("FullFuelSwipe")
-        .withCommand(
-            Commands.runOnce(() -> RobotState.getInstance().setVisionMeasurementsDisabled(false)))
-        .withDriveToPoseAllianceAgnostic(new Pose2d(3.5784, 0.663, Rotation2d.kZero))
         .withStateChange(SuperStructureState.SHOOT)
+        .withDriveToPoseAllianceAgnostic(new Pose2d(3.5784, 0.663, Rotation2d.kZero))
         .withDelay(2.0)
         .withStateChange(SuperStructureState.INTAKE)
-        .withCommand(
-            Commands.runOnce(() -> RobotState.getInstance().setVisionMeasurementsDisabled(true)))
         .withChoreoTraj("CleanSwipe")
-        .withCommand(
-            Commands.runOnce(() -> RobotState.getInstance().setVisionMeasurementsDisabled(false)))
-        .withDriveToPoseAllianceAgnostic(new Pose2d(3.5784, 0.663, Rotation2d.k180deg))
         .withStateChange(SuperStructureState.SHOOT)
+        .withDriveToPoseAllianceAgnostic(new Pose2d(3.5784, 0.663, Rotation2d.k180deg))
         .generate();
   }
 
@@ -175,13 +185,13 @@ public class AutoBuilder {
     return new AutoBuilder(drive, superStructure, true)
         .withStateChange(SuperStructureState.INTAKE)
         .withChoreoTraj("FullFuelSwipe")
-        .withDriveToPoseAllianceAgnostic(new Pose2d(3.5784, 0.663, Rotation2d.kZero))
         .withStateChange(SuperStructureState.SHOOT)
+        .withDriveToPoseAllianceAgnostic(new Pose2d(3.5784, 0.663, Rotation2d.kZero))
         .withDelay(2.0)
         .withStateChange(SuperStructureState.INTAKE)
         .withChoreoTraj("CleanSwipe")
-        .withDriveToPoseAllianceAgnostic(new Pose2d(3.5784, 0.663, Rotation2d.k180deg))
         .withStateChange(SuperStructureState.SHOOT)
+        .withDriveToPoseAllianceAgnostic(new Pose2d(3.5784, 0.663, Rotation2d.k180deg))
         .withDelay(1.0)
         .withDriveToPose(() -> FieldConstants.getHumanStation())
         .withDelay(0.8)

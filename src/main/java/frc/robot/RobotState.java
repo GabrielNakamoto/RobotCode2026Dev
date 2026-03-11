@@ -16,6 +16,7 @@ import edu.wpi.first.math.numbers.*;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Time;
+import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.RobotConfig.*;
 import frc.robot.RobotConfig.TurretConstants;
 import frc.robot.subsystems.drive.Drive;
@@ -45,27 +46,32 @@ public class RobotState {
   private static final int kMaxIterations = 10;
   private static final double kConvergenceEpsilon = 0.001;
 
-  private boolean visionMeasurementsDisabled = false;
   private Optional<DoubleConsumer> captureRewind = Optional.empty();
 
   static {
     hoodAngleMap.put(2.0, Rotation2d.fromDegrees(6.0));
     launcherSpeedMap.put(2.0, 27.5);
+    timeOfFlightMap.put(2.0, 9.0 / 8.0);
 
     hoodAngleMap.put(2.6, Rotation2d.fromDegrees(7.2));
     launcherSpeedMap.put(2.6, 30.0);
+    timeOfFlightMap.put(2.6, 9.5 / 8.0);
 
-    hoodAngleMap.put(3.0, Rotation2d.fromDegrees(9.0));
-    launcherSpeedMap.put(3.0, 31.0);
+    hoodAngleMap.put(3.0, Rotation2d.fromDegrees(8.25));
+    launcherSpeedMap.put(3.0, 30.0);
+    timeOfFlightMap.put(3.0, 9.5 / 8.0);
 
     hoodAngleMap.put(3.5, Rotation2d.fromDegrees(10.0));
     launcherSpeedMap.put(3.5, 32.0);
+    timeOfFlightMap.put(3.5, 1.0);
 
     hoodAngleMap.put(3.7, Rotation2d.fromDegrees(11.5));
     launcherSpeedMap.put(3.7, 33.0);
+    timeOfFlightMap.put(3.7, 7.0 / 8.0);
 
     hoodAngleMap.put(4.0, Rotation2d.fromDegrees(9.75));
     launcherSpeedMap.put(4.0, 34.5);
+    timeOfFlightMap.put(4.0, 10.5 / 8.0);
   }
 
   private FuelSim fuelSim;
@@ -108,11 +114,6 @@ public class RobotState {
     captureRewind.ifPresent(capture -> capture.accept(duration));
   }
 
-  public void setVisionMeasurementsDisabled(boolean set) {
-    visionMeasurementsDisabled = set;
-    Logger.recordOutput("RobotState/visionMeasurementsDisabled", visionMeasurementsDisabled);
-  }
-
   public void resetOdometry(Pose2d pose) {
     if (drive != null) {
       drive.resetOdometry(pose);
@@ -120,7 +121,9 @@ public class RobotState {
   }
 
   public void addVisionMeasurement(VisionObservation estimate) {
-    if (drive != null && !visionMeasurementsDisabled) {
+    boolean autoNeutral =
+        DriverStation.isAutonomousEnabled() && FieldConstants.inNeutralZone(getEstimatedPose());
+    if (drive != null && !autoNeutral) {
       drive.addVisionMeasurement(estimate);
     }
   }
@@ -201,11 +204,10 @@ public class RobotState {
         azimuth.getMeasure(),
         hoodAngleMap.get(hubDistance).getMeasure(),
         RotationsPerSecond.of(launcherSpeedMap.get(hubDistance)));
-    /*
-    return new TurretState(
-        azimuth.getMeasure(),
-        Degrees.of(hoodAngleTuning.getAsDouble()),
-        RotationsPerSecond.of(launcherSpeedTuning.getAsDouble()));*/
+    /*return new TurretState(
+    azimuth.getMeasure(),
+    Degrees.of(hoodAngleTuning.getAsDouble()),
+    RotationsPerSecond.of(launcherSpeedTuning.getAsDouble()));*/
   }
 
   @Deprecated

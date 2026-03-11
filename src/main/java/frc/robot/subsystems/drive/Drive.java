@@ -14,7 +14,6 @@ import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
@@ -59,6 +58,7 @@ public class Drive extends StateSubsystem<DriveState> {
   private Timer choreoTimer = new Timer();
   private Optional<Trajectory<SwerveSample>> choreoTrajectory = Optional.empty();
 
+  private Pose2d trenchPose = null;
   private Pose2d targetDrivePose = null;
   private SwerveRequest.ApplyRobotSpeeds robotRelativeRequest =
       new SwerveRequest.ApplyRobotSpeeds();
@@ -120,6 +120,7 @@ public class Drive extends StateSubsystem<DriveState> {
 
   public void driveToPose(Pose2d target) {
     this.targetDrivePose = target;
+
     setState(DriveState.TO_POSE);
   }
 
@@ -152,6 +153,10 @@ public class Drive extends StateSubsystem<DriveState> {
         linearController.reset();
         omegaController.reset();
         break;
+      case TRENCH:
+        trenchYController.reset();
+        omegaController.reset();
+        break;
       case CHOREO:
         choreoTimer.restart();
         break;
@@ -173,13 +178,17 @@ public class Drive extends StateSubsystem<DriveState> {
                 .withVelocityX(speeds.get(0))
                 .withVelocityY(speeds.get(1))
                 .withRotationalRate(speeds.get(2)));
-        // if (shouldAlignTrench(robotPose)) setState(DriveState.TRENCH);
+        /*FieldConstants.Trench.triggerTrenchAlign()
+        .ifPresent(
+            pose -> {
+              trenchPose = pose;
+              setState(DriveState.TRENCH);
+            });*/
         break;
       case TRENCH:
-        Pose2d trenchPose = FieldConstants.Trench.getNearestTrench(robotPose);
-        applyRequest(trenchRequest(robotPose, trenchPose));
-        if (robotPose.getTranslation().getDistance(trenchPose.getTranslation())
-            < Units.inchesToMeters(2.0)) setState(DriveState.TELEOP);
+        applyRequest(trenchRequest(robotPose));
+        double xError = trenchPose.getTranslation().minus(robotPose.getTranslation()).getX();
+        if (Math.abs(xError) < Units.inchesToMeters(15.0)) setState(DriveState.TELEOP);
         break;
       case CHOREO:
         if (choreoTrajectory.isPresent()) {
@@ -202,23 +211,14 @@ public class Drive extends StateSubsystem<DriveState> {
     }
   }
 
-  private boolean shouldAlignTrench(Pose2d robotPose) {
-    Pose2d trenchPose = FieldConstants.Trench.getNearestTrench(robotPose);
-    Rotation2d trenchHeading =
-        trenchPose.getTranslation().minus(robotPose.getTranslation()).getAngle();
-    Rotation2d speedHeading =
-        new Translation2d(inputs.Speeds.vxMetersPerSecond, inputs.Speeds.vyMetersPerSecond)
-            .getAngle();
-    double vmag = Math.hypot(inputs.Speeds.vxMetersPerSecond, inputs.Speeds.vyMetersPerSecond);
-    return vmag > 2.0 && trenchHeading.minus(speedHeading).getMeasure().lt(Degrees.of(60));
-  }
-
   // Match requested x joystick with output y to align to center of trench
-  private SwerveRequest trenchRequest(Pose2d robotPose, Pose2d trenchPose) {
+  private SwerveRequest trenchRequest(Pose2d robotPose) {
+    Logger.recordOutput("Drive/TrenchAlign/alignPose", trenchPose);
     double xOutput = getInputVector().get(0);
     var robotToTrench = trenchPose.minus(robotPose);
 
-    double yOutput = trenchYController.calculate(robotToTrench.getY());
+    double yError = robotToTrench.getY();
+    double yOutput = Math.signum(yError) * Math.abs(trenchYController.calculate(0.0, yError));
     double omega =
         omegaController.calculate(
             robotPose.getRotation().getRadians(), trenchPose.getRotation().getRadians());
@@ -235,9 +235,6 @@ public class Drive extends StateSubsystem<DriveState> {
     Logger.recordOutput("Drive/Choreo/linearError", linearErr);
     Logger.recordOutput("Drive/Choreo/headingErr", headingErr);
     return choreoTimer.get() - choreoTrajectory.get().getTotalTime() > 0.0;
-    /*
-    return choreoTimer.get() - choreoTrajectory.get().getTotalTime() > -0.25
-        & (linearErr < Units.inchesToMeters(8.0) && headingErr < 5.0);*/
   }
 
   public boolean atDriveToPoseSetpoint() {

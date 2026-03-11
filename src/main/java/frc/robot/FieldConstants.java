@@ -14,7 +14,9 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Filesystem;
 import frc.robot.util.AllianceFlip;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 public class FieldConstants {
   public static AprilTagFieldLayout aprilLayout;
@@ -34,17 +36,18 @@ public class FieldConstants {
   }
 
   public static boolean inNeutralZone(Pose2d robotPose) {
-    Distance robotX = robotPose.getMeasureX();
-    return robotX.lt(startingLineLengthX.plus(neutralZoneLengthX))
-        && robotX.gt(startingLineLengthX);
+    double center = fieldLength / 2.0;
+    double neutralZoneNear = center - Units.inchesToMeters(120);
+    double neutralZoneFar = center + Units.inchesToMeters(120);
+    double robotX = robotPose.getX();
+    return robotX < neutralZoneFar && robotX > neutralZoneNear;
   }
 
   public static final double fieldLength = aprilLayout.getFieldLength();
   public static final double fieldWidth = aprilLayout.getFieldWidth();
 
   // https://firstfrc.blob.core.windows.net/frc2026/Manual/2026GameManual.pdf
-  public static final Distance startingLineLengthX = Inches.of(158.6);
-  public static final Distance neutralZoneLengthX = Inches.of(283);
+  public static final Distance startingLineLengthX = aprilLayout.getTagPose(26).get().getMeasureX();
 
   public static final Distance trenchLengthX = Inches.of(65.65);
   public static final Distance trenchWidthY = Inches.of(47.0);
@@ -80,24 +83,69 @@ public class FieldConstants {
   }
 
   public static class Trench {
-    public static final Translation2d rightTrench =
+    public static final Distance trenchWidthX = Inches.of(47.0);
+    public static final Translation2d rightTrenchCenter =
         new Translation2d(startingLineLengthX, trenchCenter);
-    public static final Translation2d leftTrench =
-        new Translation2d(startingLineLengthX, Meters.of(fieldWidth).minus(trenchCenter));
+    public static final Translation2d rightTrenchClose =
+        new Translation2d(startingLineLengthX.minus(RobotConfig.bumperWidthX), trenchCenter);
+    public static final Translation2d rightTrenchFar =
+        new Translation2d(
+            startingLineLengthX.plus(trenchWidthX).plus(RobotConfig.bumperWidthX), trenchCenter);
 
-    public static Translation2d getRightTrench() {
-      return AllianceFlip.apply(rightTrench);
+    public static Optional<Pose2d> triggerTrenchAlign() {
+      var speeds = RobotState.getInstance().getFieldVelocity();
+      double speed = Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
+      if (speed < 2.0) return Optional.empty();
+
+      Pose2d robotPose = RobotState.getInstance().getEstimatedPose();
+      Pose2d trenchPose =
+          inNeutralZone(robotPose) ? getFarTrench(robotPose) : getCloseTrench(robotPose);
+      Translation2d robotToTrench = trenchPose.getTranslation().minus(robotPose.getTranslation());
+      double linearDist = robotToTrench.getNorm();
+
+      // Only trigger when within approach range (not too close, not too far)
+      if (linearDist > Units.inchesToMeters(48) || linearDist < Units.inchesToMeters(12))
+        return Optional.empty();
+
+      Translation2d speedVector =
+          new Translation2d(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
+
+      // Check robot is moving toward trench (dot product > 0 means moving toward)
+      double dotProduct =
+          speedVector.getX() * robotToTrench.getX() + speedVector.getY() * robotToTrench.getY();
+      if (dotProduct <= 0) return Optional.empty();
+
+      // Check travel direction aligns with direction to trench
+      Rotation2d directionToTrench = robotToTrench.getAngle();
+      Rotation2d travelDirection = speedVector.getAngle();
+      double travelError = travelDirection.minus(directionToTrench).getMeasure().abs(Degrees);
+      if (travelError > 60) return Optional.empty();
+
+      Rotation2d snapHeading =
+          Rotation2d.fromRadians(
+              Math.round(robotPose.getRotation().getRadians() / Math.PI) * Math.PI);
+      return Optional.of(
+          new Pose2d(
+              (inNeutralZone(robotPose) ? getCloseTrench(robotPose) : getFarTrench(robotPose))
+                  .getTranslation(),
+              snapHeading));
     }
 
-    public static Translation2d getLeftTrench() {
-      return AllianceFlip.apply(leftTrench);
+    private static List<Pose2d> resolve(Pose2d pose, Translation2d... ps) {
+      Rotation2d targetHeading = inNeutralZone(pose) ? Rotation2d.k180deg : Rotation2d.kZero;
+      return Arrays.stream(ps).map(p -> AllianceFlip.apply(new Pose2d(p, targetHeading))).toList();
     }
 
-    public static Pose2d getNearestTrench(Pose2d pose) {
-      return pose.nearest(
-          List.of(
-              new Pose2d(getRightTrench(), Rotation2d.kZero),
-              new Pose2d(getLeftTrench(), Rotation2d.kZero)));
+    private static Translation2d flipPoint(Translation2d p) {
+      return new Translation2d(p.getX(), fieldWidth - p.getY());
+    }
+
+    public static Pose2d getCloseTrench(Pose2d pose) {
+      return pose.nearest(resolve(pose, rightTrenchClose, flipPoint(rightTrenchClose)));
+    }
+
+    public static Pose2d getFarTrench(Pose2d pose) {
+      return pose.nearest(resolve(pose, rightTrenchFar, flipPoint(rightTrenchFar)));
     }
   }
 }

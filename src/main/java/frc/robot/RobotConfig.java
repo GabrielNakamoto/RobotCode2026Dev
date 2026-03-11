@@ -61,8 +61,8 @@ public class RobotConfig {
 
   public static final Mass robotMass = Kilograms.of(65.0);
 
-  public static final Distance bumperWidthX = Inches.of(30.0);
-  public static final Distance bumperWidthY = Inches.of(30.0);
+  public static final Distance bumperWidthX = Inches.of(16.75);
+  public static final Distance bumperWidthY = Inches.of(16.75);
   public static final Distance trackWidthX = Inches.of(21.75);
   public static final Distance trackWidthY = Inches.of(21.75);
 
@@ -82,11 +82,11 @@ public class RobotConfig {
     public static final double toPoseThetaTolerance = Units.degreesToRadians(3.0);
     public static final double toPoseEndSpeed = 0.25;
 
-    public static final PIDGains trenchYGains = new PIDGains(5.0, 0.0, 0.0);
+    public static final PIDGains trenchYGains = new PIDGains(2.75, 0.0, 0.0);
 
-    public static final PIDGains choreoXGains = new PIDGains(10.0, 0.0, 0.0);
-    public static final PIDGains choreoYGains = new PIDGains(10.0, 0.0, 0.0);
-    public static final PIDGains choreoOmegaGains = new PIDGains(7.5, 0.0, 0.0);
+    public static final PIDGains choreoXGains = new PIDGains(7.5, 0.0, 0.0);
+    public static final PIDGains choreoYGains = new PIDGains(7.5, 0.0, 0.0);
+    public static final PIDGains choreoOmegaGains = new PIDGains(4.5, 0.0, 0.0);
   }
 
   public static final class SpindexerConstants {
@@ -135,6 +135,7 @@ public class RobotConfig {
     public static final double shooterIdleVoltage = 1.5;
 
     public static final double azimuthLatencyCompensation = 0.050;
+    public static final double maxShootingRobotSpeed = 1.0;
     public static final Transform3d robotToTurret =
         new Transform3d(
             Units.inchesToMeters(-6.0),

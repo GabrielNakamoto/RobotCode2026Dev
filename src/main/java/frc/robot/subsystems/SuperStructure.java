@@ -5,9 +5,12 @@ import static edu.wpi.first.units.Units.*;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.FieldConstants;
 import frc.robot.RobotConfig;
 import frc.robot.RobotConfig.OperationMode;
 import frc.robot.RobotConfig.SuperStructureState;
@@ -127,14 +130,23 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
         spindexer.reverse();
         break;
       case SHOOT:
-        if (RobotConfig.getMode() == OperationMode.SIM) simulateTurretShot(turretParams);
-        // launcher.setVoltage(turretParams.launchVoltage());
         launcher.setSpeed(turretParams.launcherSpeed());
         /*
         if (azimuth.getAngle().isNear(turretParams.azimuthAngle(), TurretConstants.azimuthTolerance)
             && hood.getAngle().isNear(turretParams.hoodAngle(), TurretConstants.hoodTolerance)
             && launcher.getSpeed().gt(TurretConstants.shotSpeedThreshold)) {*/
-        if (launcher.getSpeed().isNear(turretParams.launcherSpeed(), RotationsPerSecond.of(5.0))) {
+        // HACK: auto passing will need better fix
+        boolean autoNeutral =
+            DriverStation.isAutonomous()
+                && FieldConstants.inNeutralZone(RobotState.getInstance().getEstimatedPose());
+        ChassisSpeeds speeds = RobotState.getInstance().getFieldVelocity();
+        double vmag = Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
+        if (vmag <= RobotConfig.TurretConstants.maxShootingRobotSpeed
+            && !autoNeutral
+            && RobotConfig.getMode() == OperationMode.SIM) simulateTurretShot(turretParams);
+        if (launcher.getSpeed().isNear(turretParams.launcherSpeed(), RotationsPerSecond.of(5.0))
+            && !autoNeutral
+            && vmag <= RobotConfig.TurretConstants.maxShootingRobotSpeed) {
           intake.agitate();
           spindexer.feed();
         }
