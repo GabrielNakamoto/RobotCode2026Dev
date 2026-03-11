@@ -31,8 +31,6 @@ public class AutoBuilder {
   }
 
   private static Timer autoTimer = new Timer();
-  private final Drive drive;
-  private final SuperStructure superStructure;
 
   private List<Supplier<Pose2d>> targetPoses = new ArrayList<>();
   private List<String> trajectoryNames = new ArrayList<>();
@@ -43,15 +41,9 @@ public class AutoBuilder {
 
   private List<NodeType> graph = new ArrayList<>();
 
-  private final boolean isRightSide;
+  public AutoBuilder() {}
 
-  public AutoBuilder(Drive drive, SuperStructure superStructure, boolean isRightSide) {
-    this.drive = drive;
-    this.superStructure = superStructure;
-    this.isRightSide = isRightSide;
-  }
-
-  private Pose2d flipPoseYAxis(Pose2d pose) {
+  private Pose2d flipPoseYAxis(Pose2d pose, boolean isRightSide) {
     return isRightSide
         ? pose
         : new Pose2d(
@@ -59,11 +51,11 @@ public class AutoBuilder {
             pose.getRotation().unaryMinus());
   }
 
-  private String flippedTraj(String name) {
+  private String flippedTraj(String name, boolean isRightSide) {
     return isRightSide ? name : name + "Left";
   }
 
-  public Command generate() {
+  public Command generate(Drive drive, SuperStructure superStructure, boolean isRightSide) {
     List<Command> commands = new ArrayList<>();
     int[] nodeFreqs = new int[NodeType.values().length];
     NodeType firstMove =
@@ -74,9 +66,9 @@ public class AutoBuilder {
     Supplier<Pose2d> initialPose =
         () ->
             switch (firstMove) {
-              case DRIVE_TO_POSE -> flipPoseYAxis(targetPoses.get(0).get());
+              case DRIVE_TO_POSE -> flipPoseYAxis(targetPoses.get(0).get(), isRightSide);
               case CHOREO_TRAJ ->
-                  Choreo.loadTrajectory(flippedTraj(trajectoryNames.get(0)))
+                  Choreo.loadTrajectory(flippedTraj(trajectoryNames.get(0), isRightSide))
                       .get()
                       .getInitialPose(!FieldConstants.isBlueAlliance())
                       .get();
@@ -94,14 +86,16 @@ public class AutoBuilder {
             case WAIT -> Commands.waitSeconds(delays.get(ctxIndex));
             case DRIVE_TO_POSE ->
                 drive.driveToPoseCommandDeferred(
-                    () -> flipPoseYAxis(targetPoses.get(ctxIndex).get()));
+                    () -> flipPoseYAxis(targetPoses.get(ctxIndex).get(), isRightSide));
             case TARGET_TRACK -> superStructure.setTarget(turretTargets.get(ctxIndex));
             case STATE_CHANGE ->
                 Commands.runOnce(() -> superStructure.setState(superStates.get(ctxIndex)));
             case CHOREO_TRAJ ->
                 drive.followChoreoTrajectoryCommand(
                     (Trajectory<SwerveSample>)
-                        Choreo.loadTrajectory(flippedTraj(trajectoryNames.get(ctxIndex))).get());
+                        Choreo.loadTrajectory(
+                                flippedTraj(trajectoryNames.get(ctxIndex), isRightSide))
+                            .get());
             case COMMAND -> miscCommands.get(ctxIndex);
             case CAPTURE_REWIND ->
                 Commands.runOnce(
@@ -115,109 +109,138 @@ public class AutoBuilder {
     return Commands.sequence(commands.toArray(Command[]::new));
   }
 
-  public AutoBuilder captureRewind() {
-    graph.add(NodeType.CAPTURE_REWIND);
+  private AutoBuilder append(AutoBuilder other) {
+    targetPoses.addAll(other.targetPoses);
+    miscCommands.addAll(other.miscCommands);
+    superStates.addAll(other.superStates);
+    delays.addAll(other.delays);
+    turretTargets.addAll(other.turretTargets);
+    trajectoryNames.addAll(other.trajectoryNames);
+    graph.addAll(other.graph);
     return this;
+  }
+
+  public AutoBuilder join(AutoBuilder other) {
+    return this.copy().append(other);
+  }
+
+  public AutoBuilder copy() {
+    return new AutoBuilder().append(this);
+  }
+
+  public AutoBuilder captureRewind() {
+    var copy = this.copy();
+    copy.graph.add(NodeType.CAPTURE_REWIND);
+    return copy;
   }
 
   public AutoBuilder withCommand(Command command) {
-    graph.add(NodeType.COMMAND);
-    miscCommands.add(command);
-    return this;
+    var copy = this.copy();
+    copy.graph.add(NodeType.COMMAND);
+    copy.miscCommands.add(command);
+    return copy;
   }
 
   public AutoBuilder withStateChange(SuperStructureState state) {
-    graph.add(NodeType.STATE_CHANGE);
-    superStates.add(state);
-    return this;
+    var copy = this.copy();
+    copy.graph.add(NodeType.STATE_CHANGE);
+    copy.superStates.add(state);
+    return copy;
   }
 
   public AutoBuilder withTrackTarget(TurretTarget target) {
-    graph.add(NodeType.TARGET_TRACK);
-    turretTargets.add(target);
-    return this;
+    var copy = this.copy();
+    copy.graph.add(NodeType.TARGET_TRACK);
+    copy.turretTargets.add(target);
+    return copy;
   }
 
   public AutoBuilder withDelay(double seconds) {
-    graph.add(NodeType.WAIT);
-    delays.add(seconds);
-    return this;
+    var copy = this.copy();
+    copy.graph.add(NodeType.WAIT);
+    copy.delays.add(seconds);
+    return copy;
   }
 
   public AutoBuilder withDelayTillRemaining(double secondsRemaining) {
-    graph.add(NodeType.COMMAND);
-    miscCommands.add(
+    var copy = this.copy();
+    copy.graph.add(NodeType.COMMAND);
+    copy.miscCommands.add(
         Commands.defer(
             () -> Commands.waitSeconds(20.0 - secondsRemaining - autoTimer.get()), Set.of()));
-    return this;
+    return copy;
   }
 
   public AutoBuilder withDriveToPose(Supplier<Pose2d> pose) {
-    graph.add(NodeType.DRIVE_TO_POSE);
-    targetPoses.add(pose);
-    return this;
+    var copy = this.copy();
+    copy.graph.add(NodeType.DRIVE_TO_POSE);
+    copy.targetPoses.add(pose);
+    return copy;
   }
 
   public AutoBuilder withDriveToPoseAllianceAgnostic(Pose2d pose) {
-    graph.add(NodeType.DRIVE_TO_POSE);
-    targetPoses.add(() -> AllianceFlip.apply(pose));
-    return this;
+    return withDriveToPose(() -> AllianceFlip.apply(pose));
   }
 
   public AutoBuilder withChoreoTraj(String name) {
-    graph.add(NodeType.CHOREO_TRAJ);
-    trajectoryNames.add(name);
-    return this;
+    var copy = this.copy();
+    copy.graph.add(NodeType.CHOREO_TRAJ);
+    copy.trajectoryNames.add(name);
+    return copy;
   }
 
   public static Command singleSwipe(
       Drive drive, SuperStructure superStructure, boolean isRightSide) {
-    return new AutoBuilder(drive, superStructure, isRightSide)
+    return new AutoBuilder()
         .withStateChange(SuperStructureState.INTAKE)
         .withChoreoTraj("FullFuelSwipe")
         .withStateChange(SuperStructureState.SHOOT)
         .withDriveToPoseAllianceAgnostic(new Pose2d(3.5784, 0.663, Rotation2d.kZero))
-        .generate();
+        .generate(drive, superStructure, isRightSide);
   }
 
-  public static Command swipeAndDepot(Drive drive, SuperStructure superStructure) {
-    return new AutoBuilder(drive, superStructure, false)
-        .withStateChange(SuperStructureState.INTAKE)
-        .withChoreoTraj("FullFuelSwipe")
-        .withStateChange(SuperStructureState.SHOOT)
-        .withDriveToPoseAllianceAgnostic(new Pose2d(3.5784, 0.663, Rotation2d.kZero))
-        .withDelay(2.0)
-        .withStateChange(SuperStructureState.INTAKE)
-        .withChoreoTraj("DepotCycle")
-        .withStateChange(SuperStructureState.SHOOT)
-        .withDelayTillRemaining(1.0)
-        .captureRewind()
-        .withStateChange(SuperStructureState.IDLE)
-        .withChoreoTraj("ExitDepot")
-        .generate();
-  }
+  private static AutoBuilder fullSwipeTemplate =
+      new AutoBuilder()
+          .withStateChange(SuperStructureState.INTAKE)
+          .withChoreoTraj("FullFuelSwipe")
+          .withStateChange(SuperStructureState.SHOOT)
+          .withDriveToPoseAllianceAgnostic(new Pose2d(3.5784, 0.663, Rotation2d.kZero));
+  private static AutoBuilder cleanSwipeTemplate =
+      new AutoBuilder()
+          .withStateChange(SuperStructureState.INTAKE)
+          .withChoreoTraj("CleanSwipe")
+          .withStateChange(SuperStructureState.SHOOT)
+          .withDriveToPoseAllianceAgnostic(new Pose2d(3.5784, 0.663, Rotation2d.k180deg));
 
   public static Command doubleSwipeCleanup(
       Drive drive, SuperStructure superStructure, boolean isRightSide) {
-    return new AutoBuilder(drive, superStructure, isRightSide)
-        .withStateChange(SuperStructureState.INTAKE)
-        .withChoreoTraj("FullFuelSwipe")
-        .withStateChange(SuperStructureState.SHOOT)
-        .withDriveToPoseAllianceAgnostic(new Pose2d(3.5784, 0.663, Rotation2d.kZero))
+    return fullSwipeTemplate
         .withDelay(2.0)
-        .withStateChange(SuperStructureState.INTAKE)
-        .withChoreoTraj("CleanSwipe")
-        .withStateChange(SuperStructureState.SHOOT)
-        .withDriveToPoseAllianceAgnostic(new Pose2d(3.5784, 0.663, Rotation2d.k180deg))
+        .join(cleanSwipeTemplate)
         .withDelayTillRemaining(1.0)
         .captureRewind()
         .withStateChange(SuperStructureState.IDLE)
         .withDriveToPoseAllianceAgnostic(new Pose2d(7.5784, 0.663, Rotation2d.k180deg))
-        .generate();
+        .generate(drive, superStructure, isRightSide);
   }
 
-  public static Command doubleSwipeHumanStation(Drive drive, SuperStructure superStructure) {
-    return new AutoBuilder(drive, superStructure, true)
+  public static Command swipeAndDepot(Drive drive, SuperStructure superStructure) {
+    return fullSwipeTemplate
+        .withDelay(2.0)
+        .join(
+            new AutoBuilder()
+                .withStateChange(SuperStructureState.INTAKE)
+                .withChoreoTraj("DepotCycle")
+                .withStateChange(SuperStructureState.SHOOT)
+                .withDelayTillRemaining(1.0)
+                .captureRewind()
+                .withStateChange(SuperStructureState.IDLE)
+                .withChoreoTraj("ExitDepot"))
+        .generate(drive, superStructure, false);
+  }
+
+  /*public static Command doubleSwipeHumanStation(Drive drive, SuperStructure superStructure) {
+    return new AutoBuilder()
         .withStateChange(SuperStructureState.INTAKE)
         .withChoreoTraj("FullFuelSwipe")
         .withStateChange(SuperStructureState.SHOOT)
@@ -231,6 +254,6 @@ public class AutoBuilder {
         .withDriveToPose(() -> FieldConstants.getHumanStation())
         .withDelay(0.8)
         .withDriveToPoseAllianceAgnostic(new Pose2d(1.75, 1.75, Rotation2d.kZero))
-        .generate();
-  }
+        .generate(drive, superStructure, true);
+  }*/
 }
