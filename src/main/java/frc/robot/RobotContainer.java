@@ -109,7 +109,10 @@ public class RobotContainer {
   private void configureBindings() {
     driveController.leftTrigger(0.3).onTrue(superStructure.intake()).onFalse(superStructure.idle());
     driveController.rightTrigger(0.3).onTrue(superStructure.shoot()).onFalse(superStructure.idle());
-    driveController.a().onTrue(superStructure.unjam()).onFalse(superStructure.idle());
+    driveController
+        .a()
+        .onTrue(superStructure.setTarget(TurretTarget.PASSING))
+        .onFalse(superStructure.setTarget(TurretTarget.HUB));
     driveController
         .b()
         .onTrue(superStructure.setTarget(TurretTarget.CONSTANT_FORWARD))

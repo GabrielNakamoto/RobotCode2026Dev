@@ -10,6 +10,7 @@ import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
 import edu.wpi.first.math.interpolation.InverseInterpolator;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import frc.robot.RobotConfig.TurretConstants;
@@ -76,13 +77,16 @@ public class TurretCalculator {
 
   public static TurretParameters calculateSetpoints(RobotConfig.TurretTarget target) {
     Logger.recordOutput("Tuning/hubPose", FieldConstants.Hub.getTopCenter());
+		Translation2d hubPosition = FieldConstants.Hub.getTopCenter().toTranslation2d();
     switch (target) {
+			case PASSING:
+				return getStationarySetpoint(getPassingTarget());
       case ON_THE_MOVE:
         return turretIterativeMovingSetpoint();
       case HUB:
-        return getTurretSetpoint();
+        return getStationarySetpoint(hubPosition);
       case TUNING:
-        var setpoint = getTurretSetpoint();
+        var setpoint = getStationarySetpoint(hubPosition);
         return new TurretParameters(
             setpoint.azimuthAngle(),
             Degrees.of(hoodAngleTuning.getAsDouble()),
@@ -111,13 +115,26 @@ public class TurretCalculator {
     }
   }
 
-  private static TurretParameters getTurretSetpoint() {
+	private static final double xPassTarget = Units.inchesToMeters(37);
+	private static final double yPassTarget = Units.inchesToMeters(65);
+	private static Translation2d getPassingTarget() {
+		Pose2d robotPose = RobotState.getInstance().getEstimatedPose();
+		double flippedY = AllianceFlip.apply(robotPose).getY();
+		boolean mirror = flippedY > FieldConstants.fieldWidth / 2.0;
+		return AllianceFlip.apply(
+			new Translation2d(
+				xPassTarget,
+				mirror ? FieldConstants.fieldWidth - yPassTarget : yPassTarget
+			)
+		);
+	}
+
+  private static TurretParameters getStationarySetpoint(Translation2d target) {
     Pose2d robotPose = RobotState.getInstance().getEstimatedPose();
-    Translation2d hubPosition = FieldConstants.Hub.getTopCenter().toTranslation2d();
     Rotation2d azimuth =
-        hubPosition.minus(robotPose.getTranslation()).getAngle().minus(robotPose.getRotation());
+        target.minus(robotPose.getTranslation()).getAngle().minus(robotPose.getRotation());
     Pose2d turretPose = new Pose3d(robotPose).transformBy(TurretConstants.robotToTurret).toPose2d();
-    double hubDistance = turretPose.getTranslation().getDistance(hubPosition);
+    double hubDistance = turretPose.getTranslation().getDistance(target);
     Logger.recordOutput("Tuning/hubDistance", hubDistance);
     return new TurretParameters(
         azimuth.getMeasure(),
