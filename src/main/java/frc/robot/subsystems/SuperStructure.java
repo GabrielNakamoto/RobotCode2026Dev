@@ -17,7 +17,8 @@ import frc.robot.RobotConfig.SuperStructureState;
 import frc.robot.RobotConfig.TurretConstants;
 import frc.robot.RobotConfig.TurretTarget;
 import frc.robot.RobotState;
-import frc.robot.RobotState.TurretState;
+import frc.robot.TurretCalculator;
+import frc.robot.TurretCalculator.TurretParameters;
 import frc.robot.subsystems.azimuth.Azimuth;
 import frc.robot.subsystems.hood.Hood;
 import frc.robot.subsystems.intake.Intake;
@@ -79,7 +80,7 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
     return Commands.runOnce(() -> setState(SuperStructureState.UNJAM));
   }
 
-  private void simulateTurretShot(TurretState params) {
+  private void simulateTurretShot(TurretParameters params) {
     if (simShotTimer.get() > 0.25) { // && RobotState.getInstance().consumeFuel()) {
       Pose2d robotPose = RobotState.getInstance().getSimulatedPose();
       Translation3d pos =
@@ -108,7 +109,7 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
   public void applyState() {
     Logger.recordOutput("SuperStructure/state", getCurrentState());
     Logger.recordOutput("SuperStructure/trackingTarget", target);
-    TurretState turretParams = RobotState.getInstance().resolveTurretTargetting(target);
+    TurretParameters turretParams = TurretCalculator.calculateSetpoints(target);
 
     azimuth.setAngle(turretParams.azimuthAngle());
     hood.setAngle(turretParams.hoodAngle());

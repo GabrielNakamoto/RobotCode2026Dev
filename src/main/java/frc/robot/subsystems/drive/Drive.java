@@ -78,6 +78,7 @@ public class Drive extends StateSubsystem<DriveState> {
     linearController.setTolerance(DriveConstants.toPoseLinearTolerance);
     omegaController.setTolerance(DriveConstants.toPoseThetaTolerance);
     omegaController.enableContinuousInput(-Math.PI, Math.PI);
+    trenchYController.setTolerance(DriveConstants.toPoseLinearTolerance);
     choreoOmegaController.enableContinuousInput(-Math.PI, Math.PI);
 
     setState(DriveState.IDLE);

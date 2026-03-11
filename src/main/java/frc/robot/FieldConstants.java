@@ -93,11 +93,6 @@ public class FieldConstants {
             startingLineLengthX.plus(trenchWidthX).plus(RobotConfig.bumperWidthX), trenchCenter);
 
     public static Optional<Pose2d> triggerTrenchAlign() {
-      // Conditions for trench align:
-      // 1. Within x and y range
-      // 2. Travelling a ceartain speed
-      // 3. Travelling in direction of trench
-
       return Optional.empty();
     }
 

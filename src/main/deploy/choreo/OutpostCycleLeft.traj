@@ -200,8 +200,8 @@
      "type": "MaxVelocity",
      "props": {
       "max": {
-       "exp": "0 m / s",
-       "val": 0.0
+       "exp": "1 m / s",
+       "val": 1.0
       }
      }
     },
