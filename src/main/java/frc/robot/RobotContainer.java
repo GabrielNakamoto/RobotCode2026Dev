@@ -140,7 +140,7 @@ public class RobotContainer {
         RobotConfig.bumperWidthY.in(Units.Meters),
         () -> superStructure.isIntaking(),
         RobotState.getInstance()::addFuel);
-    fuelSim.enableAirResistance();
+    // fuelSim.enableAirResistance();
     fuelSim.start();
 
     RobotState.getInstance().registerFuelSim(fuelSim);
