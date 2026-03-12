@@ -130,7 +130,7 @@ public class RobotConfig {
     public static final PIDGains azimuthGains = new PIDGains(100.0, 0.0, 5.0);
     public static final PIDGains shootGains = new PIDGains(0.75, 0.0, 0.0);
 
-    public static final Angle maxAzimuthAngle = Rotations.of(0.65);
+    public static final Angle maxAzimuthAngle = Rotations.of(0.73);
     public static final Angle minAzimuthAngle = Rotations.of(-0.35);
 
     public static final Angle azimuthTolerance = Degrees.of(1.5);
