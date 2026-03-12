@@ -6,11 +6,8 @@ package frc.robot.subsystems.vision;
 
 import static edu.wpi.first.units.Units.Inches;
 
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -19,7 +16,9 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import frc.robot.FieldConstants;
+import frc.robot.RobotConfig.CameraConfig;
 import frc.robot.RobotConfig.VisionConstants;
+import frc.robot.RobotState;
 import java.util.Optional;
 import java.util.function.Supplier;
 import org.photonvision.EstimatedRobotPose;
@@ -32,31 +31,34 @@ import org.photonvision.targeting.PhotonPipelineResult;
 
 /** Add your docs here. */
 public class VisionIOSim implements VisionIO {
-  private final PhotonCamera camera = new PhotonCamera("turret");
+  private final PhotonCamera camera;
   private final PhotonCameraSim cameraSim;
   private static VisionSystemSim visionSim;
-  public static final AprilTagFieldLayout kTagLayout =
-      AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
+
   // Our camera is mounted at...
   // (Robot pose is considered the center of rotation at the floor level, or Z = 0)
-  Translation3d robotToCameraTrl =
+  private static final Translation3d robotToCameraTrl =
       new Translation3d(Inches.of(-6.0), Inches.of(0.0), Inches.of(18.667));
   // and pitched 30 degrees up.
-  Rotation3d robotToCameraRot = new Rotation3d(0, Math.toRadians(-30.0), 0);
-  Transform3d robotToCamera = new Transform3d(robotToCameraTrl, robotToCameraRot);
+  private static final Rotation3d robotToCameraRot = new Rotation3d(0, Math.toRadians(-30.0), 0);
+  private static final Transform3d robotToCamera =
+      new Transform3d(robotToCameraTrl, robotToCameraRot);
 
-  PhotonPoseEstimator photonEstimator = new PhotonPoseEstimator(kTagLayout, robotToCamera);
-
+  private final PhotonPoseEstimator photonEstimator =
+      new PhotonPoseEstimator(FieldConstants.aprilLayout, robotToCamera);
   private final Optional<Supplier<Pose3d>> dynamicCameraPoseSupplier;
-  private final Supplier<Pose2d> poseSupplier;
+  private final CameraConfig config;
 
-  public VisionIOSim(
-      Supplier<Pose2d> poseSupplier, Optional<Supplier<Pose3d>> dynamicCameraPoseSupplier) {
+  public VisionIOSim(CameraConfig config, Optional<Supplier<Pose3d>> dynamicCameraPoseSupplier) {
     this.dynamicCameraPoseSupplier = dynamicCameraPoseSupplier;
-    this.poseSupplier = poseSupplier;
+    this.config = config;
+    this.camera = new PhotonCamera(config.name());
 
-    visionSim = new VisionSystemSim("main");
-    visionSim.addAprilTags(FieldConstants.aprilLayout);
+    if (visionSim == null) {
+      visionSim = new VisionSystemSim("main");
+      visionSim.addAprilTags(FieldConstants.aprilLayout);
+    }
+
     SimCameraProperties cameraProp = new SimCameraProperties();
     cameraProp.setAvgLatencyMs(35);
     cameraProp.setCalibError(0.25, 0.08);
@@ -65,23 +67,15 @@ public class VisionIOSim implements VisionIO {
     cameraProp.setFPS(60);
     cameraProp.setLatencyStdDevMs(5);
 
-    cameraSim = new PhotonCameraSim(new PhotonCamera("turret"), cameraProp);
+    cameraSim = new PhotonCameraSim(camera, cameraProp);
+    cameraSim.enableRawStream(false);
+    cameraSim.enableProcessedStream(false);
 
-    // Add this camera to the vision system simulation with the given robot-to-camera transform.
     visionSim.addCamera(cameraSim, robotToCamera);
-
-    // Enable the raw and processed streams. These are enabled by default.
-    cameraSim.enableRawStream(true);
-    cameraSim.enableProcessedStream(true);
-
-    // Enable drawing a wireframe visualization of the field to the camera streams.
-    // This is extremely resource-intensive and is disabled by default.
-    cameraSim.enableDrawWireframe(true);
   }
 
   @Override
   public void updateInputs(VisionIOInputs inputs) {
-    // The turret the camera is mounted on is rotated 5 degrees
     if (dynamicCameraPoseSupplier.isPresent()) {
       Pose3d cameraPose = dynamicCameraPoseSupplier.get().get();
       Transform3d cameraTransform =
@@ -90,8 +84,7 @@ public class VisionIOSim implements VisionIO {
       photonEstimator.setRobotToCameraTransform(cameraTransform);
     }
 
-    // Update with the simulated drivetrain pose. This should be called every loop in simulation.
-    visionSim.update(poseSupplier.get());
+    visionSim.update(RobotState.getInstance().getSimulatedPose());
 
     Optional<EstimatedRobotPose> visionEst = Optional.empty();
     PhotonPipelineResult result = camera.getLatestResult();
@@ -99,6 +92,11 @@ public class VisionIOSim implements VisionIO {
     if (visionEst.isEmpty()) {
       visionEst = photonEstimator.estimateLowestAmbiguityPose(result);
     }
+  }
+
+  @Override
+  public CameraConfig getConfig() {
+    return config;
   }
 
   private Matrix<N3, N1> calculateHybridStdDevs(

@@ -7,11 +7,9 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Angle;
 import frc.robot.RobotConfig.TurretConstants;
 import frc.robot.util.PhoenixSync;
@@ -44,9 +42,9 @@ public class AzimuthIOHardware implements AzimuthIO {
         .withNeutralMode(NeutralModeValue.Coast);
     // .withNeutralMode(NeutralModeValue.Brake);
     // config.ClosedLoopGeneral.withContinuousWrap(true);
-    config.Feedback.withFeedbackRemoteSensorID(encoderId)
+    config.Feedback.withFusedCANcoder(encoder)
         // .withFeedbackSensorSource(FeedbackSensorSourceValue.RemoteCANcoder)
-        .withFeedbackSensorSource(FeedbackSensorSourceValue.FusedCANcoder)
+        // .withFeedbackSensorSource(FeedbackSensorSourceValue.FusedCANcoder)
         .withSensorToMechanismRatio(1.0)
         .withRotorToSensorRatio(TurretConstants.azimuthGearRatio);
     config.SoftwareLimitSwitch.withForwardSoftLimitEnable(true)
@@ -71,20 +69,24 @@ public class AzimuthIOHardware implements AzimuthIO {
 
   @Override
   public void setAngle(Angle angle) {
-    double targetRotations = angle.in(Rotations);
-    double currentRotations = signals.getPosition().in(Rotations);
-    double diff = targetRotations - currentRotations;
-    diff = MathUtil.inputModulus(diff, -0.5, 0.5);
-    double closestTarget = currentRotations + diff;
-    if (closestTarget > TurretConstants.maxAzimuthAngle.in(Rotations)) {
-      closestTarget -= 1;
-    }
-    if (closestTarget < TurretConstants.minAzimuthAngle.in(Rotations)) {
-      closestTarget += 1;
-    }
+    /*
+       double targetRotations = angle.in(Rotations);
+       double currentRotations = signals.getPosition().in(Rotations);
+       double diff = targetRotations - currentRotations;
+       diff = MathUtil.inputModulus(diff, -0.5, 0.5);
+       double closestTarget = currentRotations + diff;
+       if (closestTarget > TurretConstants.maxAzimuthAngle.in(Rotations)) {
+         closestTarget -= 1;
+       }
+       if (closestTarget < TurretConstants.minAzimuthAngle.in(Rotations)) {
+         closestTarget += 1;
+       }
 
-    Angle finalAngle = Rotations.of(closestTarget);
-    Logger.recordOutput("Azimuth/Setpoint", finalAngle);
-    motor.setControl(request.withPosition(finalAngle));
+       Angle finalAngle = Rotations.of(closestTarget);
+       Logger.recordOutput("Azimuth/Setpoint", finalAngle);
+       motor.setControl(request.withPosition(finalAngle));
+    */
+    Logger.recordOutput("Azimuth/Setpoint", angle);
+    motor.setControl(request.withPosition(angle));
   }
 }

@@ -188,7 +188,7 @@ public class Drive extends StateSubsystem<DriveState> {
         break;
       case TRENCH:
         applyRequest(trenchRequest(robotPose));
-        double xVelocity = inputs.Speeds.vxMetersPerSecond;
+        double xVelocity = RobotState.getInstance().getFieldVelocity().vxMetersPerSecond;
         boolean passedTarget =
             (xVelocity > 0 && robotPose.getX() > trenchPose.getX())
                 || (xVelocity < 0 && robotPose.getX() < trenchPose.getX());
@@ -216,7 +216,6 @@ public class Drive extends StateSubsystem<DriveState> {
   }
 
   private SwerveRequest trenchRequest(Pose2d robotPose) {
-    Logger.recordOutput("Drive/TrenchAlign/alignPose", trenchPose);
     double xOutput = getInputVector().get(0);
     var robotToTrench = trenchPose.minus(robotPose);
 
@@ -226,6 +225,10 @@ public class Drive extends StateSubsystem<DriveState> {
         omegaController.calculate(
             robotPose.getRotation().getRadians(), trenchPose.getRotation().getRadians());
 
+    Logger.recordOutput("Drive/TrenchAlign/alignPose", trenchPose);
+    Logger.recordOutput("Drive/TrenchAlign/yError", yError);
+    Logger.recordOutput("Drive/TrenchAlign/yOutput", yOutput);
+    Logger.recordOutput("Drive/TrenchAlign/omegaOutput", omega);
     return fieldRequest.withVelocityX(xOutput).withVelocityY(yOutput).withRotationalRate(omega);
   }
 

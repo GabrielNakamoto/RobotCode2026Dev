@@ -82,13 +82,13 @@ public class TurretCalculator {
     Translation2d hubPosition = FieldConstants.Hub.getTopCenter().toTranslation2d();
     switch (target) {
       case PASSING:
-        return getStationarySetpoint(getPassingTarget());
+        return getStationarySetpoint(getPassingTarget(), currentAzimuthAngle);
       case ON_THE_MOVE:
         return turretIterativeMovingSetpoint();
       case HUB:
-        return getStationarySetpoint(hubPosition);
+        return getStationarySetpoint(hubPosition, currentAzimuthAngle);
       case TUNING:
-        var setpoint = getStationarySetpoint(hubPosition);
+        var setpoint = getStationarySetpoint(hubPosition, currentAzimuthAngle);
         return new TurretParameters(
             setpoint.azimuthAngle(),
             Degrees.of(hoodAngleTuning.getAsDouble()),
@@ -104,11 +104,13 @@ public class TurretCalculator {
         Translation2d nearestTag = robotPose.nearest(tagPoses).getTranslation();
         Logger.recordOutput("RobotState/tracking/nearestTag", robotPose.nearest(tagPoses));
         return new TurretParameters(
-            nearestTag
-                .minus(robotPose.getTranslation())
-                .getAngle()
-                .minus(robotPose.getRotation())
-                .getMeasure(),
+            calculateAzimuthAngle(
+                nearestTag
+                    .minus(robotPose.getTranslation())
+                    .getAngle()
+                    .minus(robotPose.getRotation())
+                    .getMeasure(),
+                currentAzimuthAngle),
             Radians.of(0),
             RotationsPerSecond.of(0.0));
       default:
@@ -116,17 +118,22 @@ public class TurretCalculator {
     }
   }
 
-  private static Angle calculateAzimuthAngle(Angle fieldRelativeTargetAngle, Angle currentAngle) {
-    Pose2d robotPose = RobotState.getInstance().getEstimatedPose();
-    double angle =
-        MathUtil.inputModulus(
-            new Rotation2d(fieldRelativeTargetAngle).minus(robotPose.getRotation()).getRotations(),
-            -0.5,
-            0.5);
-    double current = currentAngle.in(Rotations);
-    if (current > 0 && angle + 1 <= TurretConstants.maxAzimuthAngle.in(Rotations)) angle += 1;
-    if (current < 0 && angle - 1 >= -TurretConstants.maxAzimuthAngle.in(Rotations)) angle -= 1;
-    return Rotations.of(angle);
+  private static Angle calculateAzimuthAngle(Angle angle, Angle currentAngle) {
+    double targetRotations = angle.in(Rotations);
+    double currentRotations = currentAngle.in(Rotations);
+    double diff = targetRotations - currentRotations;
+    // Closest path
+    diff = MathUtil.inputModulus(diff, -0.5, 0.5);
+    double closestTarget = currentRotations + diff;
+    // Wrapping
+    if (closestTarget > TurretConstants.maxAzimuthAngle.in(Rotations)) {
+      closestTarget -= 1;
+    }
+    if (closestTarget < TurretConstants.minAzimuthAngle.in(Rotations)) {
+      closestTarget += 1;
+    }
+
+    return Rotations.of(closestTarget);
   }
 
   private static final double xPassTarget = Units.inchesToMeters(37);
@@ -141,7 +148,8 @@ public class TurretCalculator {
             xPassTarget, mirror ? FieldConstants.fieldWidth - yPassTarget : yPassTarget));
   }
 
-  private static TurretParameters getStationarySetpoint(Translation2d target) {
+  private static TurretParameters getStationarySetpoint(
+      Translation2d target, Angle currentAzimuthAngle) {
     Pose2d robotPose = RobotState.getInstance().getEstimatedPose();
     Rotation2d azimuth =
         target.minus(robotPose.getTranslation()).getAngle().minus(robotPose.getRotation());
@@ -149,7 +157,7 @@ public class TurretCalculator {
     double hubDistance = turretPose.getTranslation().getDistance(target);
     Logger.recordOutput("Tuning/hubDistance", hubDistance);
     return new TurretParameters(
-        azimuth.getMeasure(),
+        calculateAzimuthAngle(azimuth.getMeasure(), currentAzimuthAngle),
         hoodAngleMap.get(hubDistance).getMeasure(),
         RotationsPerSecond.of(launcherSpeedMap.get(hubDistance)));
   }

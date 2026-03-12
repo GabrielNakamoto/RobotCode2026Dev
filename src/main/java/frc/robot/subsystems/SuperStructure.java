@@ -56,7 +56,13 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
 
   @Override
   public void periodic() {
+    Pose2d robotPose = RobotState.getInstance().getEstimatedPose();
 
+    if (DriverStation.isTeleop()
+        && getCurrentState() == SuperStructureState.SHOOT
+        && (target == TurretTarget.PASSING || target == TurretTarget.HUB)) {
+      target = FieldConstants.inNeutralZone(robotPose) ? TurretTarget.PASSING : TurretTarget.HUB;
+    }
     applyState();
   }
 
@@ -139,7 +145,7 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
     SuperStructureState state = getCurrentState();
     if (coolingDown) {
       launcher.setSpeed(cooldownSpeed);
-      if (shotCooldownTimer.get() > 0.25) {
+      if (shotCooldownTimer.get() > TurretConstants.cooldownSeconds) {
         shotCooldownTimer.stop();
         coolingDown = false;
       }
@@ -162,6 +168,7 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
         break;
       case SHOOT:
         launcher.setSpeed(turretParams.launcherSpeed());
+
         // HACK: auto passing will need better fix
         boolean autoNeutral =
             DriverStation.isAutonomous()
@@ -180,7 +187,7 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
             launcher.getSpeed().isNear(turretParams.launcherSpeed(), RotationsPerSecond.of(5.0));
 
         Logger.recordOutput("SuperStructure/hoodWithinTolerance", hoodWithinTolerance);
-        // Logger.recordOutput("SuperStructure/azimuthWithinTolerance", azimuthWithinTolerance);
+        Logger.recordOutput("SuperStructure/azimuthWithinTolerance", azimuthWithinTolerance);
         Logger.recordOutput("SuperStructure/upToSpeed", upToSpeed);
         Logger.recordOutput("SuperStructure/speedCapped", speedCapped);
 
@@ -188,7 +195,7 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
           simulateTurretShot(turretParams);
         if (upToSpeed
             && hoodWithinTolerance
-            // && azimuthWithinTolerance
+            && azimuthWithinTolerance
             && !speedCapped
             && !autoNeutral) {
           intake.agitate();

@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
+import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 public class AutoBuilder {
@@ -61,27 +62,18 @@ public class AutoBuilder {
   public Command generate(Drive drive, SuperStructure superStructure, boolean isRightSide) {
     List<Command> commands = new ArrayList<>();
     int[] nodeFreqs = new int[NodeType.values().length];
-    NodeType firstMove =
-        graph.stream()
-            .filter(n -> n == NodeType.DRIVE_TO_POSE || n == NodeType.CHOREO_TRAJ)
-            .findFirst()
-            .get();
     Supplier<Pose2d> initialPose =
         () ->
-            switch (firstMove) {
-              case DRIVE_TO_POSE -> flipPoseYAxis(targetPoses.get(0).get(), isRightSide);
-              case CHOREO_TRAJ ->
-                  Choreo.loadTrajectory(flippedTraj(trajectoryNames.get(0), isRightSide))
-                      .get()
-                      .getInitialPose(!FieldConstants.isBlueAlliance())
-                      .get();
-              default -> Pose2d.kZero;
-            };
+            Choreo.loadTrajectory(flippedTraj(trajectoryNames.get(0), isRightSide))
+                .get()
+                .getInitialPose(!FieldConstants.isBlueAlliance())
+                .get();
     commands.add(
         Commands.defer(
             () -> Commands.runOnce(() -> RobotState.getInstance().resetOdometry(initialPose.get())),
             Set.of()));
     commands.add(Commands.runOnce(() -> autoTimer.restart()));
+    int n = 0;
     for (NodeType node : graph) {
       int ctxIndex = nodeFreqs[node.ordinal()];
       commands.add(
@@ -107,7 +99,10 @@ public class AutoBuilder {
                       RobotState.getInstance().captureRewind(autoTime);
                     });
           });
+      String key = "Auto/" + n + "-" + node.name();
+      commands.add(Commands.runOnce(() -> Logger.recordOutput(key, autoTimer.get())));
       nodeFreqs[node.ordinal()] += 1;
+      n += 1;
     }
     return Commands.sequence(commands.toArray(Command[]::new));
   }
@@ -204,7 +199,7 @@ public class AutoBuilder {
   private static AutoBuilder cleanSwipeTemplate = swipeTemplate("CleanSwipe", false);
   private static AutoBuilder fullSwipeTemplate = swipeTemplate("FullFuelSwipe", true);
 
-  public static Command doubleSwipeCleanup(
+  public static Command doubleSwipe(
       Drive drive, SuperStructure superStructure, boolean isRightSide) {
     return fullSwipeTemplate
         .withDelay(3.0)
@@ -216,7 +211,7 @@ public class AutoBuilder {
         .generate(drive, superStructure, isRightSide);
   }
 
-  public static Command doubleSwipeCleanupOutpost(Drive drive, SuperStructure superStructure) {
+  public static Command doubleSwipeOutpost(Drive drive, SuperStructure superStructure) {
     return fullSwipeTemplate
         .withDelay(2.75)
         .withStateChange(SuperStructureState.INTAKE)
@@ -230,27 +225,29 @@ public class AutoBuilder {
         .generate(drive, superStructure, true);
   }
 
+  public static Command doubleSwipeDepot(Drive drive, SuperStructure superStructure) {
+    return fullSwipeTemplate
+        .withDelay(2.5)
+        .join(cleanSwipeTemplate)
+        .withDelay(1.25)
+        .withStateChange(SuperStructureState.INTAKE)
+        .withChoreoTraj("DepotCycle180")
+        .withStateChange(SuperStructureState.SHOOT)
+        .captureRewind()
+        .generate(drive, superStructure, false);
+  }
+
   public static Command swipeAndDepot(Drive drive, SuperStructure superStructure) {
     return fullSwipeTemplate
-        .withDelay(2.0)
+        .withDelay(2.75)
         .withStateChange(SuperStructureState.INTAKE)
         .withChoreoTraj("DepotCycle")
         .withStateChange(SuperStructureState.SHOOT)
-        .withDelayTillRemaining(1.0)
+        .withDelayTillRemaining(0.75)
         .captureRewind()
         .withStateChange(SuperStructureState.IDLE)
         .withChoreoTraj("ExitDepot")
         .generate(drive, superStructure, false);
-  }
-
-  public static Command shootOnTheMoveTest(Drive drive, SuperStructure superStructure) {
-    return new AutoBuilder()
-        .withTrackTarget(TurretTarget.ON_THE_MOVE)
-        .withStateChange(SuperStructureState.SHOOT)
-        .withChoreoTraj("ShootOnTheMoveTest")
-        .withStateChange(SuperStructureState.IDLE)
-        .captureRewind()
-        .generate(drive, superStructure, true);
   }
 
   public static Command centerDepot(Drive drive, SuperStructure superStructure) {
@@ -261,12 +258,21 @@ public class AutoBuilder {
         .generate(drive, superStructure, false);
   }
 
+  public static Command centerOutpost(Drive drive, SuperStructure superStructure) {
+    return new AutoBuilder()
+        .withStateChange(SuperStructureState.IDLE)
+        .withChoreoTraj("CenterOutpost")
+        .withStateChange(SuperStructureState.SHOOT)
+        .generate(drive, superStructure, false);
+  }
+
   public static void registerAutoChoices(Drive drive, SuperStructure superStructure) {
-    autoChooser.addDefaultOption("2xR", doubleSwipeCleanup(drive, superStructure, true));
-    autoChooser.addOption("2xL", doubleSwipeCleanup(drive, superStructure, false));
-    autoChooser.addOption("2xOutpost", doubleSwipeCleanupOutpost(drive, superStructure));
+    autoChooser.addDefaultOption("2xR", doubleSwipe(drive, superStructure, true));
+    autoChooser.addOption("2xL", doubleSwipe(drive, superStructure, false));
+    autoChooser.addOption("0xOutpost", centerOutpost(drive, superStructure));
+    autoChooser.addOption("2xOutpost", doubleSwipeOutpost(drive, superStructure));
     autoChooser.addOption("0xDepot", centerDepot(drive, superStructure));
     autoChooser.addOption("1xDepot", swipeAndDepot(drive, superStructure));
-    autoChooser.addOption("shootOnMoveTest", shootOnTheMoveTest(drive, superStructure));
+    autoChooser.addOption("2xDepot", doubleSwipeDepot(drive, superStructure));
   }
 }

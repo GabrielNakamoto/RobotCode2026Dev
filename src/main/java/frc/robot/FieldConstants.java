@@ -7,6 +7,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -16,7 +17,10 @@ import frc.robot.util.AllianceFlip;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import frc.robot.RobotState;
 import java.util.Optional;
+
+import org.littletonrobotics.junction.Logger;
 
 public class FieldConstants {
   public static AprilTagFieldLayout aprilLayout;
@@ -94,8 +98,30 @@ public class FieldConstants {
         new Translation2d(
             startingLineLengthX.plus(trenchWidthX).plus(RobotConfig.bumperWidthX), trenchCenter);
 
+		private static double trenchYZoning = Units.inchesToMeters(24);
+		private static double trenchXZoning = Units.inchesToMeters(48);
+		private static double timeToAlign = 0.5;
+
     public static Optional<Pose2d> triggerTrenchAlign() {
-      return Optional.empty();
+			ChassisSpeeds speeds = RobotState.getInstance().getFieldVelocity();
+			Pose2d robotPose = RobotState.getInstance().getEstimatedPose();
+			Pose2d closePose = inNeutralZone(robotPose) ? getFarTrench(robotPose) : getCloseTrench(robotPose);
+			Logger.recordOutput("FieldConstants/trenchAlign/closePose", closePose);
+			robotPose = robotPose.exp(speeds.toTwist2d(timeToAlign));
+
+			double minX = closePose.getX() - trenchXZoning;
+			double maxX = closePose.getX() + trenchXZoning;
+			double minY = closePose.getY() - trenchYZoning;
+			double maxY = closePose.getY() + trenchYZoning;
+
+			boolean inZone = robotPose.getX() >= minX && robotPose.getX() <= maxX && robotPose.getY() >= minY && robotPose.getY() <= maxY;
+			if (! inZone) {
+				return Optional.empty();
+			}
+
+      return Optional.of(
+				inNeutralZone(robotPose) ? getCloseTrench(robotPose) : getFarTrench(robotPose)
+			);
     }
 
     private static List<Pose2d> resolve(Pose2d pose, Translation2d... ps) {

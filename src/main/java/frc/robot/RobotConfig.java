@@ -139,6 +139,8 @@ public class RobotConfig {
     public static final AngularVelocity shotSpeedThreshold = RotationsPerSecond.of(17.5);
     public static final double shooterIdleVoltage = 1.5;
 
+		public static final double cooldownSeconds = 1.0;
+
     public static final double azimuthLatencyCompensation = 0.050;
     public static final double maxShootingRobotSpeed = 1.0;
     public static final Transform3d robotToTurret =
@@ -160,6 +162,8 @@ public class RobotConfig {
             "limelight-turret",
             TurretConstants.robotToTurret.plus(
                 new Transform3d(Translation3d.kZero, TurretConstants.cameraRotation)));
+
+		public static final CameraConfig hopperCameraConfig = new CameraConfig("limelight-hopper", new Transform3d());
 
     public static final List<Integer> hubTags = List.of(9, 10, 25, 26);
     public static final boolean rewindEnabled = true;
