@@ -24,6 +24,7 @@ import frc.robot.subsystems.spindexer.*;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
+import frc.robot.subsystems.vision.VisionIOSim;
 import frc.robot.util.FuelSim;
 import frc.robot.util.PhoenixSync;
 import java.util.Optional;
@@ -59,7 +60,18 @@ public class RobotContainer {
                 new AzimuthIOSim(TurretConstants.azimuthMotorId, TurretConstants.azimuthEncoderId));
         hood = new Hood(new HoodIO() {});
         launcher = new Launcher(new LauncherIO() {});
-        vision = new Vision(new VisionIO() {});
+        vision =
+            new Vision(
+                new VisionIOSim(
+                    new CameraConfig(
+                        "limelight-hopper", VisionConstants.hopperRobotToCamera, Optional.empty()),
+                    Optional.empty()),
+                new VisionIOSim(
+                    new CameraConfig(
+                        "limelight-turret",
+                        VisionConstants.turretRobotToCamera,
+                        Optional.of(azimuth::isCameraAccurate)),
+                    Optional.of(azimuth::getTurretCameraPose)));
         configureFuelSim();
         break;
       case REAL:

@@ -239,7 +239,7 @@ public class AutoBuilder {
 
   public static Command swipeAndDepot(Drive drive, SuperStructure superStructure) {
     return fullSwipeTemplate
-        .withDelay(2.75)
+        .withDelay(3.0)
         .withStateChange(SuperStructureState.INTAKE)
         .withChoreoTraj("DepotCycle")
         .withStateChange(SuperStructureState.SHOOT)

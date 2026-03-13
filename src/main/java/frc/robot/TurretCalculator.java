@@ -17,6 +17,7 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import frc.robot.RobotConfig.TurretConstants;
 import frc.robot.util.AllianceFlip;
 import frc.robot.util.LoggedTunableNumber;
+import frc.robot.util.PolynomialRegression;
 import java.util.List;
 import org.littletonrobotics.junction.Logger;
 
@@ -24,12 +25,37 @@ public class TurretCalculator {
   public record TurretParameters(
       Angle azimuthAngle, Angle hoodAngle, AngularVelocity launcherSpeed) {}
 
+  private static final PolynomialRegression hoodAngleFn =
+      new PolynomialRegression(
+          new double[][] {
+            {1.5, 2.0},
+            {2.0, 6.0},
+            {3.0, 8.25},
+            {3.5, 10.0},
+            {4.5, 15.0}
+          },
+          2);
+  private static final PolynomialRegression launcherSpeedFn =
+      new PolynomialRegression(
+          new double[][] {
+            {1.5, 28.0},
+            {2.0, 27.5},
+            {3.0, 30.0},
+            {3.5, 32.0},
+            {4.5, 34.0}
+          },
+          2);
+
   private static final InterpolatingTreeMap<Double, Rotation2d> hoodAngleMap =
       new InterpolatingTreeMap<>(InverseInterpolator.forDouble(), Rotation2d::interpolate);
   private static final InterpolatingDoubleTreeMap launcherSpeedMap =
       new InterpolatingDoubleTreeMap();
   private static final InterpolatingDoubleTreeMap timeOfFlightMap =
       new InterpolatingDoubleTreeMap();
+
+  private static final InterpolatingTreeMap<Double, Rotation2d> newHoodLUT =
+      new InterpolatingTreeMap<>(InverseInterpolator.forDouble(), Rotation2d::interpolate);
+  private static final InterpolatingDoubleTreeMap newLauncherLUT = new InterpolatingDoubleTreeMap();
 
   private static final InterpolatingTreeMap<Double, Rotation2d> passingHoodAngleMap =
       new InterpolatingTreeMap<>(InverseInterpolator.forDouble(), Rotation2d::interpolate);
@@ -48,41 +74,45 @@ public class TurretCalculator {
     passingHoodAngleMap.put(0.0, Rotation2d.fromDegrees(0.0));
     passingLauncherSpeedMap.put(0.0, 0.0);
 
-    hoodAngleMap.put(3.7, Rotation2d.fromDegrees(11.5));
+    // Experimental LUTs
+    newHoodLUT.put(1.5, Rotation2d.fromDegrees(5.0));
+    newHoodLUT.put(2.0, Rotation2d.fromDegrees(7.5));
+    newHoodLUT.put(2.6, Rotation2d.fromDegrees(15.0));
+    newHoodLUT.put(3.0, Rotation2d.fromDegrees(11.0));
+    newHoodLUT.put(3.5, Rotation2d.fromDegrees(18.0));
+    newHoodLUT.put(4.0, Rotation2d.fromDegrees(20.5));
+    newHoodLUT.put(4.5, Rotation2d.fromDegrees(21.25));
+    newHoodLUT.put(5.2, Rotation2d.fromDegrees(18));
 
-    // hoodAngleMap.put(1.5, Rotation2d.fromDegrees(5.0));
+    newLauncherLUT.put(1.5, 26.75);
+    newLauncherLUT.put(2.0, 27.0);
+    newLauncherLUT.put(2.6, 28.0);
+    newLauncherLUT.put(3.0, 38.5);
+    newLauncherLUT.put(3.5, 30.0);
+    newLauncherLUT.put(4.0, 33.0);
+    newLauncherLUT.put(4.5, 33.25);
+
+    // Current LUTs
     hoodAngleMap.put(1.5, Rotation2d.fromDegrees(2.0));
-    // hoodAngleMap.put(2.0, Rotation2d.fromDegrees(7.5));
     hoodAngleMap.put(2.0, Rotation2d.fromDegrees(6.0));
-    // hoodAngleMap.put(2.6, Rotation2d.fromDegrees(15.0));
     hoodAngleMap.put(2.6, Rotation2d.fromDegrees(7.2));
-    // hoodAngleMap.put(3.0, Rotation2d.fromDegrees(11.0));
     hoodAngleMap.put(3.0, Rotation2d.fromDegrees(8.25));
-    // hoodAngleMap.put(3.5, Rotation2d.fromDegrees(18.0));
     hoodAngleMap.put(3.5, Rotation2d.fromDegrees(10.0));
-    // hoodAngleMap.put(4.0, Rotation2d.fromDegrees(20.5));
+    hoodAngleMap.put(3.7, Rotation2d.fromDegrees(11.5));
     hoodAngleMap.put(4.0, Rotation2d.fromDegrees(9.75));
-    // hoodAngleMap.put(4.5, Rotation2d.fromDegrees(21.25));
     hoodAngleMap.put(4.5, Rotation2d.fromDegrees(15));
-    // hoodAngleMap.put(5.2, Rotation2d.fromDegrees(18));
 
-    launcherSpeedMap.put(3.7, 33.0);
-    // launcherSpeedMap.put(1.5, 26.75);
     launcherSpeedMap.put(1.5, 28.0);
-    // launcherSpeedMap.put(2.0, 27.0);
     launcherSpeedMap.put(2.0, 27.5);
-    // launcherSpeedMap.put(2.6, 28.0);
     launcherSpeedMap.put(2.6, 30.0);
-    // launcherSpeedMap.put(3.0, 38.5);
     launcherSpeedMap.put(3.0, 30.0);
-    // launcherSpeedMap.put(3.5, 30.0);
     launcherSpeedMap.put(3.5, 32.0);
-    // launcherSpeedMap.put(4.0, 33.0);
+    launcherSpeedMap.put(3.7, 33.0);
     launcherSpeedMap.put(4.0, 34.5);
-    // launcherSpeedMap.put(4.5, 33.25);
     launcherSpeedMap.put(4.5, 34.0);
     launcherSpeedMap.put(5.2, 40.0);
 
+    // TOF Data (needs to be retested)
     timeOfFlightMap.put(2.0, 9.0 / 8.0);
     timeOfFlightMap.put(2.6, 9.5 / 8.0);
     timeOfFlightMap.put(3.0, 9.5 / 8.0);
@@ -181,6 +211,12 @@ public class TurretCalculator {
         hoodAngleMap.get(hubDistance).getMeasure(),
         RotationsPerSecond.of(launcherSpeedMap.get(hubDistance)));
   }
+
+  // https://github.com/FRC3161/Rebuilt2026/blob/main/src/main/java/frc/robot/subsystems/Drive/CommandSwerveDrivetrain.java#L144
+  /*
+  private static TurretParameters turretSOFTSetpoint() {
+    Pose2d robotPose = RobotState.getInstance().getEstimatedPose();
+  }*/
 
   // https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/dynamic-shooting.html
   private static TurretParameters turretIterativeMovingSetpoint(Angle currentAzimuthAngle) {

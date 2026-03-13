@@ -144,16 +144,6 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
     hood.setAngle(Radians.of(0.0));
 
     SuperStructureState state = getCurrentState();
-    if (coolingDown) {
-      launcher.setSpeed(cooldownSpeed);
-      if (shotCooldownTimer.get() > TurretConstants.cooldownSeconds) {
-        shotCooldownTimer.stop();
-        coolingDown = false;
-      }
-    } else {
-      launcher.setSpeed(RotationsPerSecond.of(10.0));
-    }
-    // launcher.setVoltage(TurretConstants.shooterIdleVoltage);
     switch (state) {
       case IDLE:
         intake.retract();
@@ -186,7 +176,9 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
                 .getAngle()
                 .isNear(turretParams.azimuthAngle(), TurretConstants.azimuthTolerance);
         boolean upToSpeed =
-            launcher.getSpeed().isNear(turretParams.launcherSpeed(), RotationsPerSecond.of(5.0));
+            launcher
+                .getSpeed()
+                .isNear(turretParams.launcherSpeed(), TurretConstants.shotSpeedTolerance);
 
         Logger.recordOutput("SuperStructure/hoodWithinTolerance", hoodWithinTolerance);
         Logger.recordOutput("SuperStructure/azimuthWithinTolerance", azimuthWithinTolerance);
@@ -204,6 +196,16 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
           spindexer.feed();
         }
         break;
+    }
+    if (coolingDown) {
+      launcher.setSpeed(cooldownSpeed);
+      spindexer.cooldown();
+      if (shotCooldownTimer.get() > TurretConstants.cooldownSeconds) {
+        shotCooldownTimer.stop();
+        coolingDown = false;
+      }
+    } else {
+      launcher.setSpeed(RotationsPerSecond.of(10.0));
     }
   }
 }

@@ -9,6 +9,7 @@ import org.littletonrobotics.junction.Logger;
 enum SpindexerState {
   HOLD,
   FEED,
+  COOLDOWN,
   REVERSE
 }
 
@@ -41,6 +42,10 @@ public class Spindexer extends StateSubsystem<SpindexerState> {
     setState(SpindexerState.FEED);
   }
 
+  public void cooldown() {
+    setState(SpindexerState.COOLDOWN);
+  }
+
   public void reverse() {
     setState(SpindexerState.REVERSE);
   }
@@ -59,6 +64,10 @@ public class Spindexer extends StateSubsystem<SpindexerState> {
       case HOLD:
         outputs.indexMotorVoltage = Volts.zero();
         outputs.feedMotorVoltage = Volts.zero();
+        break;
+      case COOLDOWN:
+        outputs.indexMotorVoltage = Volts.of(0.0);
+        outputs.feedMotorVoltage = Volts.of(4.5);
         break;
       case FEED:
         outputs.indexMotorVoltage = Volts.of(2.5);
