@@ -71,6 +71,10 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
     return getCurrentState() == SuperStructureState.INTAKE;
   }
 
+  public Command setStateCommand(SuperStructureState state) {
+    return Commands.runOnce(() -> setState(state));
+  }
+
   public Command setTarget(TurretTarget target) {
     return Commands.runOnce(() -> this.target = target);
   }
@@ -85,10 +89,6 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
 
   public Command shoot() {
     return Commands.runOnce(() -> setState(SuperStructureState.SHOOT));
-  }
-
-  public Command unjam() {
-    return Commands.runOnce(() -> setState(SuperStructureState.UNJAM));
   }
 
   private void simulateTurretShot(TurretParameters params) {
@@ -142,9 +142,19 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
 
     azimuth.setAngle(turretParams.azimuthAngle());
     hood.setAngle(Radians.of(0.0));
+		launcher.setSpeed(RotationsPerSecond.of(10.0)); // idle speed
 
     SuperStructureState state = getCurrentState();
+    if (coolingDown && shotCooldownTimer.get() > TurretConstants.cooldownSeconds) {
+        shotCooldownTimer.stop();
+        coolingDown = false;
+    }
+
     switch (state) {
+      case REVERSE_INTAKE:
+        intake.reverse();
+        spindexer.hold();
+        break;
       case IDLE:
         intake.retract();
         spindexer.hold();
@@ -152,10 +162,6 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
       case INTAKE:
         intake.run();
         spindexer.hold();
-        break;
-      case UNJAM:
-        intake.stay();
-        spindexer.reverse();
         break;
       case SHOOT:
         hood.setAngle(turretParams.hoodAngle());
@@ -197,15 +203,10 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
         }
         break;
     }
-    if (coolingDown) {
+
+		if (coolingDown && state != SuperStructureState.SHOOT) {
       launcher.setSpeed(cooldownSpeed);
       spindexer.cooldown();
-      if (shotCooldownTimer.get() > TurretConstants.cooldownSeconds) {
-        shotCooldownTimer.stop();
-        coolingDown = false;
-      }
-    } else {
-      launcher.setSpeed(RotationsPerSecond.of(10.0));
-    }
+		}
   }
 }

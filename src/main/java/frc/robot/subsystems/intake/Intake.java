@@ -11,7 +11,8 @@ enum IntakeState {
   IDLE,
   RETRACT,
   INTAKE,
-  AGITATE
+  AGITATE,
+  REVERSE
 }
 
 public class Intake extends StateSubsystem<IntakeState> {
@@ -34,6 +35,10 @@ public class Intake extends StateSubsystem<IntakeState> {
     io.applyOutputs(outputs);
   }
 
+  public void reverse() {
+    setState(IntakeState.REVERSE);
+  }
+
   public void run() {
     setState(IntakeState.INTAKE);
   }
@@ -50,8 +55,15 @@ public class Intake extends StateSubsystem<IntakeState> {
     setState(IntakeState.AGITATE);
   }
 
+  private boolean isStalled() {
+		return inputs.intakeVelocity.lt(RotationsPerSecond.of(2.0));
+  }
+
   @Override
   public void applyState() {
+    if (getCurrentState() == IntakeState.INTAKE && isStalled()) {
+      setState(IntakeState.REVERSE);
+    }
     switch (getCurrentState()) {
       case IDLE:
         outputs.extendVoltage = Volts.zero();
@@ -60,6 +72,10 @@ public class Intake extends StateSubsystem<IntakeState> {
       case RETRACT:
         outputs.extendVoltage = Volts.of(-4.0);
         outputs.intakeVoltage = Volts.of(1.5);
+        break;
+      case REVERSE:
+        outputs.extendVoltage = Volts.of(8.0);
+        outputs.intakeVoltage = Volts.of(-9.0);
         break;
       case INTAKE:
         outputs.extendVoltage = Volts.of(8.0);

@@ -4,13 +4,17 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.RobotConfig.CameraConfig;
 import frc.robot.RobotConfig.IntakeConstants;
+import frc.robot.RobotConfig.SuperStructureState;
 import frc.robot.RobotConfig.TurretConstants;
 import frc.robot.RobotConfig.TurretTarget;
 import frc.robot.RobotConfig.VisionConstants;
@@ -24,7 +28,6 @@ import frc.robot.subsystems.spindexer.*;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
-import frc.robot.subsystems.vision.VisionIOSim;
 import frc.robot.util.FuelSim;
 import frc.robot.util.PhoenixSync;
 import java.util.Optional;
@@ -60,6 +63,8 @@ public class RobotContainer {
                 new AzimuthIOSim(TurretConstants.azimuthMotorId, TurretConstants.azimuthEncoderId));
         hood = new Hood(new HoodIO() {});
         launcher = new Launcher(new LauncherIO() {});
+        vision = new Vision(new VisionIO() {});
+        /*
         vision =
             new Vision(
                 new VisionIOSim(
@@ -71,7 +76,7 @@ public class RobotContainer {
                         "limelight-turret",
                         VisionConstants.turretRobotToCamera,
                         Optional.of(azimuth::isCameraAccurate)),
-                    Optional.of(azimuth::getTurretCameraPose)));
+                    Optional.of(azimuth::getTurretCameraPose)));*/
         configureFuelSim();
         break;
       case REAL:
@@ -137,6 +142,10 @@ public class RobotContainer {
         .onFalse(superStructure.idle());
     driveController.leftTrigger(0.3).onTrue(superStructure.shoot()).onFalse(superStructure.idle());
     driveController
+        .rightBumper()
+        .onTrue(superStructure.setStateCommand(SuperStructureState.REVERSE_INTAKE))
+        .onFalse(superStructure.setStateCommand(SuperStructureState.IDLE));
+    driveController
         .a()
         .onTrue(superStructure.setTarget(TurretTarget.FRONT_OF_HUB))
         .onFalse(superStructure.setTarget(TurretTarget.HUB));
@@ -144,6 +153,15 @@ public class RobotContainer {
         .b()
         .onTrue(superStructure.setTarget(TurretTarget.CONSTANT_FORWARD))
         .onFalse(superStructure.setTarget(TurretTarget.HUB));
+    driveController
+        .start()
+        .onTrue(
+            Commands.runOnce(
+                () ->
+                    drive.resetOdometry(
+                        new Pose2d(
+                            RobotState.getInstance().getEstimatedPose().getTranslation(),
+                            Rotation2d.kZero))));
     /*
       driveController
           .x()

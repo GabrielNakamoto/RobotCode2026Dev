@@ -14,6 +14,8 @@ import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
+
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.RobotState;
 import frc.robot.RobotConfig.IntakeConstants;
 import frc.robot.util.PhoenixSync;
@@ -43,7 +45,7 @@ public class IntakeIOHardware implements IntakeIO {
     extendConfig.Feedback.withSensorToMechanismRatio(IntakeConstants.extendGearRatio);
     extendConfig.MotorOutput.withNeutralMode(NeutralModeValue.Brake);
     extendConfig.withSlot0(IntakeConstants.extendGains.toSlot0Configs());
-    extendConfig.CurrentLimits.withStatorCurrentLimit(15);
+    extendConfig.CurrentLimits.withStatorCurrentLimit(20);
     extendConfig
         .SoftwareLimitSwitch
         .withForwardSoftLimitEnable(true)

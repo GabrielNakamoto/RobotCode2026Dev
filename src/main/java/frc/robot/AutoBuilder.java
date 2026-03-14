@@ -202,12 +202,12 @@ public class AutoBuilder {
   public static Command doubleSwipe(
       Drive drive, SuperStructure superStructure, boolean isRightSide) {
     return fullSwipeTemplate
-        .withDelay(3.0)
+        .withDelay(3.5)
         .join(cleanSwipeTemplate)
-        .withDelayTillRemaining(0.5)
-        .captureRewind()
-        .withStateChange(SuperStructureState.IDLE)
-        .withDriveToPoseAllianceAgnostic(new Pose2d(7.5784, 0.663, Rotation2d.k180deg))
+        // .withDelayTillRemaining(0.5)
+        // .captureRewind()
+        // .withStateChange(SuperStructureState.IDLE)
+        // .withDriveToPoseAllianceAgnostic(new Pose2d(7.5784, 0.663, Rotation2d.k180deg))
         .generate(drive, superStructure, isRightSide);
   }
 
@@ -221,7 +221,7 @@ public class AutoBuilder {
         .withDelayTillRemaining(1.25)
         .withStateChange(SuperStructureState.IDLE)
         .withChoreoTraj("LeaveOutpost")
-        .captureRewind()
+        // .captureRewind()
         .generate(drive, superStructure, true);
   }
 
@@ -233,7 +233,7 @@ public class AutoBuilder {
         .withStateChange(SuperStructureState.INTAKE)
         .withChoreoTraj("DepotCycle180")
         .withStateChange(SuperStructureState.SHOOT)
-        .captureRewind()
+        // .captureRewind()
         .generate(drive, superStructure, false);
   }
 
@@ -244,7 +244,7 @@ public class AutoBuilder {
         .withChoreoTraj("DepotCycle")
         .withStateChange(SuperStructureState.SHOOT)
         .withDelayTillRemaining(0.75)
-        .captureRewind()
+        // .captureRewind()
         .withStateChange(SuperStructureState.IDLE)
         .withChoreoTraj("ExitDepot")
         .generate(drive, superStructure, false);

@@ -36,7 +36,7 @@ public class RobotConfig {
     IDLE,
     INTAKE,
     SHOOT,
-    UNJAM
+    REVERSE_INTAKE
   }
 
   public enum OperationMode {
@@ -140,7 +140,7 @@ public class RobotConfig {
 
     public static final Angle azimuthTolerance = Degrees.of(3.5);
     public static final Angle hoodTolerance = Degrees.of(1.0);
-    public static final AngularVelocity shotSpeedTolerance = RotationsPerSecond.of(3.5);
+    public static final AngularVelocity shotSpeedTolerance = RotationsPerSecond.of(5.0);
 
     public static final double shooterIdleVoltage = 1.5;
 
@@ -162,16 +162,6 @@ public class RobotConfig {
   }
 
   public static final class VisionConstants {
-    /*
-      public static final CameraConfig turretCameraConfig =
-          new CameraConfig(
-              "limelight-turret",
-              TurretConstants.robotToTurret.plus(
-                  new Transform3d(Translation3d.kZero, TurretConstants.cameraRotation)));
-
-      public static final CameraConfig hopperCameraConfig =
-          new CameraConfig("limelight-hopper", new Transform3d());
-    */
     public static final Transform3d turretRobotToCamera =
         TurretConstants.robotToTurret.plus(
             new Transform3d(Translation3d.kZero, TurretConstants.cameraRotation));

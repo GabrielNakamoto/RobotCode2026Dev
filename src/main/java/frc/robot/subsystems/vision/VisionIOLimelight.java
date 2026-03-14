@@ -45,7 +45,7 @@ public class VisionIOLimelight implements VisionIO {
   @Override
   public void updateInputs(VisionIOInputs inputs) {
     if (DriverStation.isDisabled()) {
-      LimelightHelpers.SetThrottle(config.name(), 200);
+      LimelightHelpers.SetThrottle(config.name(), 100);
       LimelightHelpers.SetIMUMode(config.name(), 1);
     } else {
       LimelightHelpers.SetThrottle(config.name(), 0);
@@ -54,7 +54,8 @@ public class VisionIOLimelight implements VisionIO {
 
     double lastHeartbeat = heartBeat;
     heartBeat = LimelightHelpers.getHeartbeat(config.name());
-    inputs.isConnected = heartBeat != lastHeartbeat;
+    inputs.isConnected = Math.abs(heartBeat - lastHeartbeat) < 10;
+    // inputs.isConnected = heartBeat != lastHeartbeat;
 
     if (dynamicCameraPoseSupplier.isPresent()) {
       Pose3d camPose = dynamicCameraPoseSupplier.get().get();
