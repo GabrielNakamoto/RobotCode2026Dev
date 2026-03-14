@@ -4,12 +4,15 @@ import static edu.wpi.first.units.Units.Seconds;
 
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotConfig.CameraConfig;
 import frc.robot.RobotConfig.VisionConstants;
 import frc.robot.RobotState;
 import frc.robot.RobotState.VisionObservation;
+import frc.robot.util.FuelSim;
+
 import org.littletonrobotics.junction.Logger;
 
 public class Vision extends SubsystemBase {
@@ -21,6 +24,8 @@ public class Vision extends SubsystemBase {
   private int acceptedMeasurements = 0;
   private int rejectedMeasurements = 0;
   private int hubObservations = 0;
+
+	private Pose2d lastPoseEstimate = Pose2d.kZero;
 
   public Vision(VisionIO... cameras) {
     this.cameras = cameras;
@@ -59,6 +64,7 @@ public class Vision extends SubsystemBase {
         Logger.recordOutput("Vision/" + camName + "/acceptedPose", state.poseEstimate);
         Logger.recordOutput("Vision/" + camName + "/acceptedTimestamp", state.timestamp);
 
+
         RobotState.getInstance()
             .addVisionMeasurement(
                 new VisionObservation(
@@ -79,6 +85,10 @@ public class Vision extends SubsystemBase {
     if (state.numTags == 0 || state.avgTagDist > VisionConstants.maxAcceptableDistance) {
       return false;
     }
+
+		Pose2d fusedEstimate = RobotState.getInstance().getEstimatedPose();
+		double latentDistance = state.poseEstimate.getTranslation().getDistance(fusedEstimate.getTranslation());
+		// if (latentDistance > 3.5) return false; dont do it this way, just check the difference between vision estimates
 
     if (state.stdDevs != null) {
       double maxStd = Math.max(state.stdDevs.get(0, 0), state.stdDevs.get(1, 0));

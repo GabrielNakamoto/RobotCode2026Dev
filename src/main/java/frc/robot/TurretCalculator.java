@@ -87,7 +87,7 @@ public class TurretCalculator {
     newLauncherLUT.put(1.5, 26.75);
     newLauncherLUT.put(2.0, 27.0);
     newLauncherLUT.put(2.6, 28.0);
-    newLauncherLUT.put(3.0, 38.5);
+    newLauncherLUT.put(3.0, 29.5);
     newLauncherLUT.put(3.5, 30.0);
     newLauncherLUT.put(4.0, 33.0);
     newLauncherLUT.put(4.5, 33.25);
@@ -99,7 +99,7 @@ public class TurretCalculator {
     hoodAngleMap.put(3.0, Rotation2d.fromDegrees(8.25));
     hoodAngleMap.put(3.5, Rotation2d.fromDegrees(10.0));
     hoodAngleMap.put(3.7, Rotation2d.fromDegrees(11.5));
-    hoodAngleMap.put(4.0, Rotation2d.fromDegrees(9.75));
+    hoodAngleMap.put(4.0, Rotation2d.fromDegrees(12));
     hoodAngleMap.put(4.5, Rotation2d.fromDegrees(15));
 
     launcherSpeedMap.put(1.5, 28.0);
@@ -108,7 +108,7 @@ public class TurretCalculator {
     launcherSpeedMap.put(3.0, 30.0);
     launcherSpeedMap.put(3.5, 32.0);
     launcherSpeedMap.put(3.7, 33.0);
-    launcherSpeedMap.put(4.0, 34.5);
+    launcherSpeedMap.put(4.0, 33.5);
     launcherSpeedMap.put(4.5, 34.0);
     launcherSpeedMap.put(5.2, 40.0);
 

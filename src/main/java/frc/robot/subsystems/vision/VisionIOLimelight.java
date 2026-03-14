@@ -6,9 +6,11 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotController;
 import frc.robot.RobotConfig.*;
 import frc.robot.RobotState;
 import frc.robot.util.LimelightHelpers;
@@ -22,13 +24,16 @@ public class VisionIOLimelight implements VisionIO {
   private final Optional<Supplier<Pose3d>> dynamicCameraPoseSupplier;
   private final CameraConfig config;
   private final NetworkTable NT;
-  private double heartBeat = 0.0;
+  private DoubleSubscriber latencySubscriber;
+
+  // private double heartBeat = 0.0;
 
   public VisionIOLimelight(
       CameraConfig config, Optional<Supplier<Pose3d>> dynamicCameraPoseSupplier) {
     this.dynamicCameraPoseSupplier = dynamicCameraPoseSupplier;
     this.config = config;
     this.NT = NetworkTableInstance.getDefault().getTable(config.name());
+    latencySubscriber = NT.getDoubleTopic("tl").subscribe(0.0);
 
     LimelightHelpers.setCameraPose_RobotSpace(
         config.name(),
@@ -40,22 +45,25 @@ public class VisionIOLimelight implements VisionIO {
         Math.toDegrees(config.robotToCamera().getRotation().getZ()));
 
     LimelightHelpers.setRewindEnabled(config.name(), VisionConstants.rewindEnabled);
+    LimelightHelpers.SetIMUMode(config.name(), 3);
   }
 
   @Override
   public void updateInputs(VisionIOInputs inputs) {
     if (DriverStation.isDisabled()) {
       LimelightHelpers.SetThrottle(config.name(), 100);
-      LimelightHelpers.SetIMUMode(config.name(), 1);
+      // LimelightHelpers.SetIMUMode(config.name(), 1);
     } else {
       LimelightHelpers.SetThrottle(config.name(), 0);
-      LimelightHelpers.SetIMUMode(config.name(), 3);
+      // LimelightHelpers.SetIMUMode(config.name(), 3);
     }
 
+    inputs.isConnected =
+        ((RobotController.getFPGATime() - latencySubscriber.getLastChange()) / 1000) < 250;
+    /*
     double lastHeartbeat = heartBeat;
     heartBeat = LimelightHelpers.getHeartbeat(config.name());
-    inputs.isConnected = Math.abs(heartBeat - lastHeartbeat) < 10;
-    // inputs.isConnected = heartBeat != lastHeartbeat;
+    inputs.isConnected = Math.abs(heartBeat - lastHeartbeat) < 10;*/
 
     if (dynamicCameraPoseSupplier.isPresent()) {
       Pose3d camPose = dynamicCameraPoseSupplier.get().get();

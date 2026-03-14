@@ -130,7 +130,8 @@ public class RobotContainer {
     }
     superStructure = new SuperStructure(spindexer, hood, azimuth, launcher, intake);
     PhoenixSync.optimizeAll();
-    AutoBuilder.registerAutoChoices(drive, superStructure);
+    AutoBuilder2.registerAutoChoices(drive, superStructure);
+    // AutoBuilder.registerAutoChoices(drive, superStructure);
 
     configureBindings();
   }
@@ -162,12 +163,11 @@ public class RobotContainer {
                         new Pose2d(
                             RobotState.getInstance().getEstimatedPose().getTranslation(),
                             Rotation2d.kZero))));
-    /*
-      driveController
-          .x()
-          .onTrue(superStructure.setTarget(TurretTarget.TUNING))
-          .onFalse(superStructure.setTarget(TurretTarget.HUB));
-      driveController
+    driveController
+        .x()
+        .onTrue(superStructure.setTarget(TurretTarget.TUNING))
+        .onFalse(superStructure.setTarget(TurretTarget.HUB));
+    /*driveController
           .y()
           .onTrue(superStructure.setTarget(TurretTarget.ON_THE_MOVE))
           .onFalse(superStructure.setTarget(TurretTarget.HUB));
@@ -197,6 +197,7 @@ public class RobotContainer {
   }
 
   public Command getAutonomousCommand() {
-    return AutoBuilder.autoChooser.get();
+    return AutoBuilder2.autoChooser.get();
+    // return AutoBuilder.autoChooser.get();
   }
 }

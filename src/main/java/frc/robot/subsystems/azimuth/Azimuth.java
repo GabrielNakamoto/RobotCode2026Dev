@@ -36,7 +36,8 @@ public class Azimuth extends SubsystemBase {
     if (positionRots < 0 && positionRots > -0.20) acc = false;
     if (positionRots > 0 && positionRots < 0.15) acc = false;
     Logger.recordOutput("Azimuth/cameraEnabled", acc);
-    return acc;
+    // return acc;
+    return true;
   }
 
   public Pose3d getTurretCameraPose() {

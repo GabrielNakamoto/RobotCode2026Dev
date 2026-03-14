@@ -177,10 +177,10 @@ public class RobotConfig {
     public static final boolean rewindEnabled = true;
 
     // Hybrid stddev tuning
-    public static final double baseStddevMultiplier = 0.8;
+    public static final double baseStddevMultiplier = 0.9;
     public static final double maxReliableDistance = 4.0;
     public static final double distanceScalingExponent = 2.0;
-    public static final double singleTagPenalty = 1.0;
+    public static final double singleTagPenalty = 2.5;
 
     // Filtering thresholds
     public static final double maxAcceptableDistance = 5.0;

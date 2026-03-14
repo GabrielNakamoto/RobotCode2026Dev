@@ -33,6 +33,7 @@ public class Intake extends StateSubsystem<IntakeState> {
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Intake", inputs);
+    Logger.recordOutput("Intake/state", getCurrentState());
 
     applyState();
     io.applyOutputs(outputs);
@@ -59,7 +60,7 @@ public class Intake extends StateSubsystem<IntakeState> {
   }
 
   private boolean isStalled() {
-    return stateChangeTimer.get() < 0.5 && inputs.intakeVelocity.abs(RotationsPerSecond) < 2.0;
+    return stateChangeTimer.get() > 0.5 && inputs.intakeVelocity.abs(RotationsPerSecond) < 2.0;
   }
 
   @Override

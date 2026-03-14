@@ -167,7 +167,6 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
         hood.setAngle(turretParams.hoodAngle());
         launcher.setSpeed(turretParams.launcherSpeed());
 
-        // HACK: auto passing will need better fix
         boolean autoNeutral =
             DriverStation.isAutonomous()
                 && FieldConstants.inNeutralZone(RobotState.getInstance().getEstimatedPose());
@@ -191,8 +190,9 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
         Logger.recordOutput("SuperStructure/upToSpeed", upToSpeed);
         Logger.recordOutput("SuperStructure/speedCapped", speedCapped);
 
-        if (!speedCapped && !autoNeutral && RobotConfig.getMode() == OperationMode.SIM)
+        if (!speedCapped && !autoNeutral && RobotConfig.getMode() == OperationMode.SIM) {
           simulateTurretShot(turretParams);
+        }
         if (upToSpeed
             && hoodWithinTolerance
             && azimuthWithinTolerance
