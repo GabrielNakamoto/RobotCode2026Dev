@@ -32,7 +32,7 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
   private Timer simShotTimer = new Timer();
   private Timer shotCooldownTimer = new Timer();
   private boolean coolingDown = false;
-  private AngularVelocity cooldownSpeed = RotationsPerSecond.of(0.0);
+  private TurretParameters cooldownParams = new TurretParameters(Radians.of(0.0), Radians.of(0.0), RotationsPerSecond.of(0.0));
 
   private final Spindexer spindexer;
   private final Hood hood;
@@ -126,7 +126,7 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
             TurretCalculator.calculateSetpoints(target, azimuth.getAngle());
         coolingDown = true;
         shotCooldownTimer.restart();
-        cooldownSpeed = turretParams.launcherSpeed();
+        cooldownParams = turretParams;
         break;
       default:
         break;
@@ -204,7 +204,8 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
     }
 
     if (coolingDown && state != SuperStructureState.SHOOT) {
-      launcher.setSpeed(cooldownSpeed);
+      launcher.setSpeed(cooldownParams.launcherSpeed());
+      hood.setAngle(cooldownParams.hoodAngle());
       spindexer.cooldown();
     }
   }

@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.RobotConfig.CameraConfig;
+import frc.robot.RobotConfig.DriveConstants;
 import frc.robot.RobotConfig.IntakeConstants;
 import frc.robot.RobotConfig.SuperStructureState;
 import frc.robot.RobotConfig.TurretConstants;
@@ -162,6 +163,18 @@ public class RobotContainer {
         .x()
         .onTrue(superStructure.setTarget(TurretTarget.TUNING))
         .onFalse(superStructure.setTarget(TurretTarget.HUB));
+    driveController
+        .y()
+        .onTrue(
+            superStructure
+                .setTarget(TurretTarget.ON_THE_MOVE)
+                .andThen(Commands.runOnce(() -> drive.setTeleopSpeedLimit(1.0))))
+        .onFalse(
+            superStructure
+                .setTarget(TurretTarget.HUB)
+                .andThen(
+                    Commands.runOnce(
+                        () -> drive.setTeleopSpeedLimit(DriveConstants.maxDriveSpeedMps))));
   }
 
   private void configureFuelSim() {

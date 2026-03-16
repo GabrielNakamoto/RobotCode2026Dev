@@ -36,11 +36,12 @@ public class FieldConstants {
   public static final Translation3d hubCenter =
       new Translation3d(neutralZoneStart, fieldWidth.div(2.0), Inches.of(72.0));
   public static final Translation2d humanOutpost =
-      new Translation2d(0.0, aprilLayout.getTagPose(29).get().getY());
+      new Translation2d(
+          RobotConfig.bumperWidthX.in(Meters), aprilLayout.getTagPose(29).get().getY());
   public static final Translation2d allianceTrenchShot =
       new Translation2d(
           neutralZoneStart.minus(RobotConfig.bumperWidthX),
-          aprilLayout.getTagPose(28).get().getMeasureY().div(2.0));
+          aprilLayout.getTagPose(28).get().getMeasureY());
 
   public static boolean inNeutralZone(Pose2d pose) {
     return pose.getMeasureX().gte(neutralZoneStart) && pose.getMeasureX().lte(neutralZoneEnd);

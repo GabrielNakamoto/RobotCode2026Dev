@@ -58,6 +58,7 @@ public class Drive extends StateSubsystem<DriveState> {
   private Timer choreoTimer = new Timer();
   private Optional<Trajectory<SwerveSample>> choreoTrajectory = Optional.empty();
 
+  private double teleopSpeedLimit = DriveConstants.maxDriveSpeedMps;
   private Pose2d trenchPose = null;
   private Pose2d targetDrivePose = null;
   private SwerveRequest.ApplyRobotSpeeds robotRelativeRequest =
@@ -102,6 +103,10 @@ public class Drive extends StateSubsystem<DriveState> {
 
   public void setIdle() {
     setState(DriveState.IDLE);
+  }
+
+  public void setTeleopSpeedLimit(double limit) {
+    teleopSpeedLimit = limit;
   }
 
   public Command driveToPoseCommand(Pose2d target) {
@@ -305,6 +310,7 @@ public class Drive extends StateSubsystem<DriveState> {
     magnitude = magnitude * magnitude; // heuristic
     magnitude *= DriveConstants.maxDriveSpeedMps;
 
+    if (magnitude > teleopSpeedLimit) magnitude = teleopSpeedLimit;
     double xVelocity = magnitude * heading.getCos() * (FieldConstants.isBlueAlliance() ? 1 : -1);
     double yVelocity = magnitude * heading.getSin() * (FieldConstants.isBlueAlliance() ? 1 : -1);
     return VecBuilder.fill(xVelocity, yVelocity, omega);
