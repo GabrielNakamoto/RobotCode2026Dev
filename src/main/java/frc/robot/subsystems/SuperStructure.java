@@ -143,8 +143,8 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
     azimuth.setAngle(turretParams.azimuthAngle());
     hood.setAngle(Radians.of(0.0));
     launcher.setSpeed(RotationsPerSecond.of(10.0)); // idle speed
-	
-		// TODO: hood down on trench
+
+    // TODO: hood down on trench
     SuperStructureState state = getCurrentState();
     if (coolingDown && shotCooldownTimer.get() > TurretConstants.cooldownSeconds) {
       shotCooldownTimer.stop();
@@ -164,7 +164,7 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
         intake.run();
         spindexer.hold();
         break;
-			case SHOOT_INTAKE:
+      case SHOOT_INTAKE:
       case SHOOT:
         hood.setAngle(turretParams.hoodAngle());
         launcher.setSpeed(turretParams.launcherSpeed());
@@ -192,13 +192,12 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
         if (!speedCapped && RobotConfig.getMode() == OperationMode.SIM) {
           simulateTurretShot(turretParams);
         }
-        if (upToSpeed && hoodWithinTolerance && azimuthWithinTolerance && !speedCapped
-        ) {
-					if (state == SuperStructureState.SHOOT_INTAKE) {
-						intake.run();
-					} else {
-						intake.agitate();
-					}
+        if (upToSpeed && hoodWithinTolerance && azimuthWithinTolerance && !speedCapped) {
+          if (state == SuperStructureState.SHOOT_INTAKE) {
+            intake.run();
+          } else {
+            intake.agitate();
+          }
           spindexer.feed();
         }
         break;

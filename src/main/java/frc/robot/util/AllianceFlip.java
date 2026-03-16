@@ -1,16 +1,18 @@
 package frc.robot.util;
 
+import static edu.wpi.first.units.Units.*;
+
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.FieldConstants;
 
 public class AllianceFlip {
   public static double applyX(double x) {
-    return shouldFlip() ? FieldConstants.fieldLength - x : x;
+    return shouldFlip() ? FieldConstants.fieldLength.in(Meters) - x : x;
   }
 
   public static double applyY(double y) {
-    return shouldFlip() ? FieldConstants.fieldWidth - y : y;
+    return shouldFlip() ? FieldConstants.fieldWidth.in(Meters) - y : y;
   }
 
   public static Translation2d apply(Translation2d translation) {

@@ -5,9 +5,7 @@ import choreo.trajectory.SwerveSample;
 import choreo.trajectory.Trajectory;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -56,7 +54,8 @@ public class AutoBuilder {
   private Pose2d flipPoseYAxis(Pose2d pose) {
     return shouldFlipYAxis
         ? new Pose2d(
-            new Translation2d(pose.getX(), FieldConstants.fieldWidth - pose.getY()),
+            new Translation2d(
+                pose.getMeasureX(), FieldConstants.fieldWidth.minus(pose.getMeasureY())),
             pose.getRotation().unaryMinus())
         : pose;
   }
@@ -221,7 +220,8 @@ public class AutoBuilder {
         .withDelay(2.75)
         .withStateChange(SuperStructureState.INTAKE)
         .withChoreoTraj("CleanSwipe")
-        .withDriveToPose(FieldConstants::getHumanStation)
+        .withDriveToPose(
+            () -> AllianceFlip.apply(new Pose2d(FieldConstants.humanOutpost, Rotation2d.kZero)))
         .withDelayTillRemaining(1.25)
         .withStateChange(SuperStructureState.IDLE)
         .withChoreoTraj("LeaveOutpost")
@@ -231,7 +231,8 @@ public class AutoBuilder {
   public static Command swipeOutpost(Drive drive, SuperStructure superStructure) {
     return fullSwipeTemplate(false)
         .withDelay(2.75)
-        .withDriveToPose(FieldConstants::getHumanStation)
+        .withDriveToPose(
+            () -> AllianceFlip.apply(new Pose2d(FieldConstants.humanOutpost, Rotation2d.kZero)))
         .withDelayTillRemaining(0.75)
         .withStateChange(SuperStructureState.IDLE)
         .withChoreoTraj("LeaveOutpost")
