@@ -6,7 +6,6 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -32,7 +31,8 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
   private Timer simShotTimer = new Timer();
   private Timer shotCooldownTimer = new Timer();
   private boolean coolingDown = false;
-  private TurretParameters cooldownParams = new TurretParameters(Radians.of(0.0), Radians.of(0.0), RotationsPerSecond.of(0.0));
+  private TurretParameters cooldownParams =
+      new TurretParameters(Radians.of(0.0), Radians.of(0.0), RotationsPerSecond.of(0.0));
 
   private final Spindexer spindexer;
   private final Hood hood;

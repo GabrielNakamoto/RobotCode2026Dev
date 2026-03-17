@@ -3,6 +3,7 @@ package frc.robot;
 import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.configs.Slot0Configs;
+import com.revrobotics.spark.config.ClosedLoopConfig;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
@@ -18,14 +19,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.BooleanSupplier;
 
-/*
- * Complete description of physical and virtual robot configuration
- */
 public class RobotConfig {
   public enum TurretTarget {
     HUB,
     ON_THE_MOVE,
-    NEAREST_TAG,
     PASSING,
     TUNING,
     CONSTANT_FORWARD,
@@ -55,6 +52,10 @@ public class RobotConfig {
 
     public Slot0Configs toSlot0Configs() {
       return new Slot0Configs().withKP(kp).withKI(ki).withKD(kd);
+    }
+
+    public ClosedLoopConfig toSparkGains() {
+      return new ClosedLoopConfig().p(kp).i(ki).d(kd);
     }
   }
 
@@ -107,16 +108,16 @@ public class RobotConfig {
     public static final int extendMotorId = 30;
     public static final int intakeMotorId = 31;
 
+    public static final double extensionRampRate = 0.125;
+    public static final double extensionAgitatePeriod = 0.3;
+
     public static final double extensionRadius = Units.inchesToMeters(0.7);
     public static final double intakeGearRatio = 1.8667;
     public static final double extendGearRatio = 1.8364;
-    public static final PIDGains extendGains = new PIDGains(1.05, 0.0, 0.0);
+    public static final PIDGains extendGains = new PIDGains(5.5, 0.0, 0.05);
 
     public static final Distance maxExtension = Inches.of(11.0);
     public static final Distance maxRetraction = Inches.of(7.5);
-
-    public static final Distance agitateOutDist = Inches.of(10.0);
-    public static final Distance agitateInDist = Inches.of(7.5);
   }
 
   public static final class TurretConstants {
@@ -155,7 +156,6 @@ public class RobotConfig {
             Units.inchesToMeters(-6.0),
             Units.inchesToMeters(18.667),
             new Rotation3d(0.0, 0.0, 0.0));
-    // new Rotation3d(0.0, 0.0, Units.rotationsToRadians(0.125)));
 
     public static final Rotation3d cameraRotation =
         new Rotation3d(0.0, Units.degreesToRadians(30), 0.0);
@@ -189,7 +189,7 @@ public class RobotConfig {
   }
 
   public static final class SimConstants {
-    public static final double drivetrainSimLoopPeriod = 0.005; // 5ms
-    public static final double azimuthMOI = 0.025; // kg*m², turret moment of inertia
+    public static final double drivetrainSimLoopPeriod = 0.005;
+    public static final double azimuthMOI = 0.025;
   }
 }

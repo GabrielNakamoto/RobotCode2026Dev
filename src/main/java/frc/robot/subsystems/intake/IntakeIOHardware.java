@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.PersistMode;
@@ -23,6 +24,7 @@ import org.littletonrobotics.junction.Logger;
 public class IntakeIOHardware implements IntakeIO {
   private final TalonFX extendMotor;
   private final TalonFXSignals extendSignals;
+  private PositionVoltage extendRequest = new PositionVoltage(0.0);
 
   private final SparkFlex intakeMotor;
   private final RelativeEncoder intakeEncoder;
@@ -39,7 +41,7 @@ public class IntakeIOHardware implements IntakeIO {
         intakeConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
 
     var extendConfig = new TalonFXConfiguration();
-    extendConfig.ClosedLoopRamps.withVoltageClosedLoopRampPeriod(0.45);
+    extendConfig.ClosedLoopRamps.withVoltageClosedLoopRampPeriod(0.175);
     extendConfig.Feedback.withSensorToMechanismRatio(IntakeConstants.extendGearRatio);
     extendConfig.MotorOutput.withNeutralMode(NeutralModeValue.Brake);
     extendConfig.withSlot0(IntakeConstants.extendGains.toSlot0Configs());
@@ -83,10 +85,12 @@ public class IntakeIOHardware implements IntakeIO {
           .getConfigurator()
           .apply(new MotorOutputConfigs().withNeutralMode(NeutralModeValue.Brake));
     }
-    Logger.recordOutput("Intake/extensionSetpoint", outputs.extendVoltage);
+    Logger.recordOutput("Intake/extensionSetpoint", outputs.extensionDistance.in(Meters));
+    // Logger.recordOutput("Intake/extensionSetpoint", outputs.extendVoltage);
     Logger.recordOutput("Intake/intakeSetpoint", outputs.intakeVoltage);
 
-    extendMotor.setVoltage(outputs.extendVoltage.in(Volts));
+    // extendMotor.setVoltage(outputs.extendVoltage.in(Volts));
+    extendMotor.setControl(extendRequest.withPosition(outputs.extensionDistance.in(Inches)));
     intakeMotor.setVoltage(outputs.intakeVoltage.in(Volts));
   }
 }

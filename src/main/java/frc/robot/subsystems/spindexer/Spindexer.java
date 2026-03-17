@@ -83,19 +83,23 @@ public class Spindexer extends StateSubsystem<SpindexerState> {
     switch (getCurrentState()) {
       case HOLD:
         outputs.indexMotorVoltage = Volts.zero();
-        outputs.feedMotorVoltage = Volts.zero();
+        outputs.feedVelocity = RotationsPerSecond.of(0.0);
+        // outputs.feedMotorVoltage = Volts.zero();
         break;
       case COOLDOWN:
         outputs.indexMotorVoltage = Volts.of(0.0);
-        outputs.feedMotorVoltage = Volts.of(4.5);
+        outputs.feedVelocity = RotationsPerSecond.of(7.5);
+        // outputs.feedMotorVoltage = Volts.of(4.5);
         break;
       case FEED:
         outputs.indexMotorVoltage = Volts.of(3.5);
-        outputs.feedMotorVoltage = Volts.of(4.5);
+        outputs.feedVelocity = RotationsPerSecond.of(7.5);
+        // outputs.feedMotorVoltage = Volts.of(4.5);
         break;
       case REVERSE:
         outputs.indexMotorVoltage = Volts.of(-7.0);
-        outputs.feedMotorVoltage = Volts.of(-4.5);
+        outputs.feedVelocity = RotationsPerSecond.of(-7.5);
+        // outputs.feedMotorVoltage = Volts.of(-4.5);
         break;
     }
   }

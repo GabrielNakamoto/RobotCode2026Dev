@@ -141,7 +141,7 @@ public class RobotContainer {
         .rightTrigger(0.3)
         .onTrue(superStructure.intake())
         .onFalse(superStructure.idle());
-    driveController.leftTrigger(0.3).onTrue(superStructure.shoot()).onFalse(superStructure.idle());
+    // driveController.leftTrigger(0.3).onTrue(superStructure.shoot()).onFalse(superStructure.idle());
     driveController
         .rightBumper()
         .onTrue(superStructure.setStateCommand(SuperStructureState.REVERSE_INTAKE))
@@ -164,14 +164,16 @@ public class RobotContainer {
         .onTrue(superStructure.setTarget(TurretTarget.TUNING))
         .onFalse(superStructure.setTarget(TurretTarget.HUB));
     driveController
-        .y()
+        .leftTrigger(0.3)
         .onTrue(
             superStructure
                 .setTarget(TurretTarget.ON_THE_MOVE)
+                .andThen(superStructure.shoot())
                 .andThen(Commands.runOnce(() -> drive.setTeleopSpeedLimit(1.0))))
         .onFalse(
             superStructure
                 .setTarget(TurretTarget.HUB)
+                .andThen(superStructure.idle())
                 .andThen(
                     Commands.runOnce(
                         () -> drive.setTeleopSpeedLimit(DriveConstants.maxDriveSpeedMps))));

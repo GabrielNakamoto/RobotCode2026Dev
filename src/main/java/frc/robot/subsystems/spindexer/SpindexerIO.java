@@ -23,7 +23,8 @@ public interface SpindexerIO {
 
   public class SpindexerIOOutputs {
     public Voltage indexMotorVoltage = Volts.zero();
-    public Voltage feedMotorVoltage = Volts.zero();
+    public AngularVelocity feedVelocity = RotationsPerSecond.of(0.0);
+    // public Voltage feedMotorVoltage = Volts.zero();
   }
 
   public default void updateInputs(SpindexerIOInputs inputs) {}

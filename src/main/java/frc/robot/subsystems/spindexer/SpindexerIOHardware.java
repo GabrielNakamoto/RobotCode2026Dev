@@ -6,6 +6,8 @@ import com.revrobotics.PersistMode;
 import com.revrobotics.REVLibError;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
+import com.revrobotics.spark.SparkBase.ControlType;
+import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
@@ -18,18 +20,22 @@ public class SpindexerIOHardware implements SpindexerIO {
   private final SparkFlex feedMotor;
   private final RelativeEncoder indexEncoder;
   private final RelativeEncoder feedEncoder;
+  private final SparkClosedLoopController feedController;
 
   public SpindexerIOHardware(int indexId, int feedId) {
     indexMotor = new SparkFlex(indexId, MotorType.kBrushless);
     feedMotor = new SparkFlex(feedId, MotorType.kBrushless);
     indexEncoder = indexMotor.getEncoder();
     feedEncoder = feedMotor.getEncoder();
+    feedController = feedMotor.getClosedLoopController();
 
     SparkFlexConfig indexConfig = new SparkFlexConfig();
     indexConfig.idleMode(IdleMode.kBrake).inverted(true).smartCurrentLimit(29);
     indexConfig.encoder.positionConversionFactor(SpindexerConstants.indexGearRatio);
 
     SparkFlexConfig feedConfig = new SparkFlexConfig();
+    feedConfig.closedLoop.pid(0.0, 0.0, 0.0);
+    feedConfig.closedLoop.feedForward.kV(0.05);
     feedConfig.idleMode(IdleMode.kBrake).inverted(true).smartCurrentLimit(60);
     feedConfig.encoder.positionConversionFactor(SpindexerConstants.feedGearRatio);
 
@@ -57,9 +63,11 @@ public class SpindexerIOHardware implements SpindexerIO {
   @Override
   public void applyOutputs(SpindexerIOOutputs outputs) {
     Logger.recordOutput("Spindexer/indexSetpoint", outputs.indexMotorVoltage);
-    Logger.recordOutput("Spindexer/feedSetpoint", outputs.feedMotorVoltage);
+    Logger.recordOutput("Spindexer/feedSetpoint", outputs.feedVelocity);
+    // Logger.recordOutput("Spindexer/feedSetpoint", outputs.feedMotorVoltage);
 
     indexMotor.setVoltage(outputs.indexMotorVoltage.in(Volts));
-    feedMotor.setVoltage(outputs.feedMotorVoltage.in(Volts));
+    feedController.setSetpoint(outputs.feedVelocity.in(RPM), ControlType.kVelocity);
+    // feedMotor.setVoltage(outputs.feedMotorVoltage.in(Volts));
   }
 }

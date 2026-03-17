@@ -18,7 +18,6 @@ import frc.robot.RobotConfig.TurretConstants;
 import frc.robot.util.AllianceFlip;
 import frc.robot.util.LoggedTunableNumber;
 import frc.robot.util.PolynomialRegression;
-import java.util.List;
 import org.littletonrobotics.junction.Logger;
 
 public class TurretCalculator {
@@ -89,7 +88,7 @@ public class TurretCalculator {
     timeOfFlightMap.put(2.6, 0.94);
     timeOfFlightMap.put(3.0, 1.03);
     timeOfFlightMap.put(3.5, 0.97);
-    timeOfFlightMap.put(4.0, 1.07); 
+    timeOfFlightMap.put(4.0, 1.07);
   }
 
   private static final TurretParameters FRONT_OF_HUB_PARAMS =
@@ -116,24 +115,6 @@ public class TurretCalculator {
             RotationsPerSecond.of(launcherSpeedTuning.getAsDouble()));
       case CONSTANT_FORWARD:
         return new TurretParameters(Rotations.of(0.5), Radians.of(0.0), RadiansPerSecond.of(0.0));
-      case NEAREST_TAG:
-        List<Pose2d> tagPoses =
-            FieldConstants.aprilLayout.getTags().stream()
-                .map(tag -> AllianceFlip.apply(tag.pose.toPose2d()))
-                .toList();
-        Pose2d robotPose = RobotState.getInstance().getEstimatedPose();
-        Translation2d nearestTag = robotPose.nearest(tagPoses).getTranslation();
-        Logger.recordOutput("RobotState/tracking/nearestTag", robotPose.nearest(tagPoses));
-        return new TurretParameters(
-            calculateAzimuthAngle(
-                nearestTag
-                    .minus(robotPose.getTranslation())
-                    .getAngle()
-                    .minus(robotPose.getRotation())
-                    .getMeasure(),
-                currentAzimuthAngle),
-            Radians.of(0),
-            RotationsPerSecond.of(0.0));
       default:
         return new TurretParameters(Radians.of(0), Radians.of(0), RotationsPerSecond.of(0.0));
     }
@@ -183,20 +164,18 @@ public class TurretCalculator {
         RotationsPerSecond.of(newLauncherLUT.get(hubDistance) - 1.65));
   }
 
-  // https://github.com/FRC3161/Rebuilt2026/blob/main/src/main/java/frc/robot/subsystems/Drive/CommandSwerveDrivetrain.java#L144
   // https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/dynamic-shooting.html
   private static TurretParameters turretIterativeMovingSetpoint(Angle currentAzimuthAngle) {
     Pose2d robotPose = RobotState.getInstance().getEstimatedPose();
     Pose2d turretPose = new Pose3d(robotPose).transformBy(TurretConstants.robotToTurret).toPose2d();
     Translation2d originalTarget = AllianceFlip.apply(FieldConstants.hubCenter.toTranslation2d());
-		Logger.recordOutput("TurretCalculator/target", AllianceFlip.apply(FieldConstants.hubCenter));
-		// Logger.recordOutput("TurretCalculator/turretPose", turretPose);
     Translation2d fieldVelocity =
         rigidPointVelocity(
                 RobotState.getInstance().getRobotVelocity(),
                 TurretConstants.robotToTurret.getTranslation().toTranslation2d())
             .rotateBy(robotPose.getRotation());
-		if (fieldVelocity.getNorm() < 0.25) return getStationarySetpoint(originalTarget, currentAzimuthAngle);
+    if (fieldVelocity.getNorm() < 0.25)
+      return getStationarySetpoint(originalTarget, currentAzimuthAngle);
     double distance = turretPose.getTranslation().getDistance(originalTarget);
     double tof = timeOfFlightMap.get(distance) + 0.2;
     for (int i = 0; i < kMaxIterations; ++i) {
@@ -207,7 +186,8 @@ public class TurretCalculator {
       tof = timeOfFlightMap.get(distance) + 0.2;
     }
 
-		Translation2d aimVector = originalTarget.minus(turretPose.getTranslation().plus(fieldVelocity.times(tof)));
+    Translation2d aimVector =
+        originalTarget.minus(turretPose.getTranslation().plus(fieldVelocity.times(tof)));
     Rotation2d azimuthAngle = aimVector.getAngle().minus(robotPose.getRotation());
     return new TurretParameters(
         calculateAzimuthAngle(azimuthAngle.getMeasure(), currentAzimuthAngle),
