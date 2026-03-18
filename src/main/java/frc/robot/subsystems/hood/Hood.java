@@ -1,15 +1,24 @@
 package frc.robot.subsystems.hood;
 
+import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Rotations;
+
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 
 public class Hood extends SubsystemBase {
   private final HoodIO io;
   private final HoodIOInputsAutoLogged inputs = new HoodIOInputsAutoLogged();
+  private final Supplier<Angle> azimuthAngle;
 
-  public Hood(HoodIO io) {
+  public Hood(HoodIO io, Supplier<Angle> azimuthAngle) {
     this.io = io;
+    this.azimuthAngle = azimuthAngle;
   }
 
   public Angle getAngle() {
@@ -25,5 +34,14 @@ public class Hood extends SubsystemBase {
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Hood", inputs);
+    Logger.recordOutput(
+        "Hood/HoodPose",
+        new Pose3d(
+                Inches.of(-6),
+                Inches.of(-6),
+                Inches.of(17.375),
+                new Rotation3d(Rotations.zero(), getAngle(), azimuthAngle.get()))
+            .transformBy(
+                new Transform3d(Inches.of(6), Inches.zero(), Inches.zero(), Rotation3d.kZero)));
   }
 }

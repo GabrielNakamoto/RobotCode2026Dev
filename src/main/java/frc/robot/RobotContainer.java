@@ -61,8 +61,10 @@ public class RobotContainer {
         intake = new Intake(new IntakeIO() {});
         azimuth =
             new Azimuth(
-                new AzimuthIOSim(TurretConstants.azimuthMotorId, TurretConstants.azimuthEncoderId));
-        hood = new Hood(new HoodIO() {});
+                // new AzimuthIOSimAdvanced(TurretConstants.azimuthMotorId,
+                // TurretConstants.azimuthEncoderId));
+                new AzimuthIOSimSimple());
+        hood = new Hood(new HoodIOSimSimple(), azimuth::getAngle);
         launcher = new Launcher(new LauncherIO() {});
         vision = new Vision(new VisionIO() {});
         /*
@@ -103,7 +105,7 @@ public class RobotContainer {
             new Azimuth(
                 new AzimuthIOHardware(
                     TurretConstants.azimuthMotorId, TurretConstants.azimuthEncoderId));
-        hood = new Hood(new HoodIOHardware(TurretConstants.hoodMotorId));
+        hood = new Hood(new HoodIOHardware(TurretConstants.hoodMotorId), azimuth::getAngle);
         launcher = new Launcher(new LauncherIOHardware(TurretConstants.launcherMotorId));
         vision =
             new Vision(
@@ -125,7 +127,7 @@ public class RobotContainer {
         spindexer = new Spindexer(new SpindexerIO() {});
         intake = new Intake(new IntakeIO() {});
         azimuth = new Azimuth(new AzimuthIO() {});
-        hood = new Hood(new HoodIO() {});
+        hood = new Hood(new HoodIO() {}, azimuth::getAngle);
         launcher = new Launcher(new LauncherIO() {});
         break;
     }

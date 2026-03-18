@@ -28,7 +28,7 @@ import org.ironmaple.simulation.motorsims.SimulatedBattery;
 import org.littletonrobotics.junction.Logger;
 
 /** Add your docs here. */
-public class AzimuthIOSim implements AzimuthIO {
+public class AzimuthIOSimAdvanced implements AzimuthIO {
   private DCMotor gearbox = DCMotor.getKrakenX60(1);
   private DCMotorSim turretSim =
       new DCMotorSim(
@@ -41,7 +41,7 @@ public class AzimuthIOSim implements AzimuthIO {
 
   private PositionVoltage request = new PositionVoltage(0.0);
 
-  public AzimuthIOSim(int motorId, int encoderId) {
+  public AzimuthIOSimAdvanced(int motorId, int encoderId) {
     this.motor = new TalonFX(motorId);
     this.encoder = new CANcoder(encoderId);
 
