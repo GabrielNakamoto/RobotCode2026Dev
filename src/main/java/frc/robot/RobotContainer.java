@@ -170,6 +170,7 @@ public class RobotContainer {
         .onTrue(
             superStructure
                 .setTarget(TurretTarget.ON_THE_MOVE)
+                // .setTarget(TurretTarget.TUNING)
                 .andThen(superStructure.shoot())
                 .andThen(Commands.runOnce(() -> drive.setTeleopSpeedLimit(1.0))))
         .onFalse(

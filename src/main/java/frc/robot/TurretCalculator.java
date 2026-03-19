@@ -46,6 +46,7 @@ public class TurretCalculator {
     passingHoodAngleMap.put(0.0, Rotation2d.fromDegrees(0.0));
     passingLauncherSpeedMap.put(0.0, 0.0);
 
+    // Hood angle in
     newHoodLUT.put(1.5, Rotation2d.fromDegrees(5.0));
     newHoodLUT.put(2.0, Rotation2d.fromDegrees(8.5));
     newHoodLUT.put(2.6, Rotation2d.fromDegrees(15.0));
@@ -53,6 +54,7 @@ public class TurretCalculator {
     newHoodLUT.put(3.5, Rotation2d.fromDegrees(19.75));
     newHoodLUT.put(4.0, Rotation2d.fromDegrees(22.25));
 
+    // Speed in Revolutions Per Second
     newLauncherLUT.put(1.5, 26.75);
     newLauncherLUT.put(2.0, 27.0);
     newLauncherLUT.put(2.6, 29.0);
