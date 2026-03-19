@@ -63,7 +63,7 @@ public class IntakeIOHardware implements IntakeIO {
     inputs.extendConnected = extendSignals.isConnected();
     // Position is in inches due to SensorToMechanismRatio converting rotations to inches
     inputs.extendPosition = Inches.of(extendSignals.getPosition().in(Rotations));
-    inputs.extendVelocity = extendSignals.getVelocity();
+    inputs.extendVelocity = MetersPerSecond.of(extendSignals.getVelocity().in(RotationsPerSecond));
     inputs.extendVoltageApplied = extendSignals.getVoltage();
     inputs.extendCurrent = extendSignals.getCurrent();
 

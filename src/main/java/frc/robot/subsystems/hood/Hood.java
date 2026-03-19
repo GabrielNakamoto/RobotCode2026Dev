@@ -39,9 +39,10 @@ public class Hood extends SubsystemBase {
         new Pose3d(
                 Inches.of(-6),
                 Inches.of(-6),
-                Inches.of(17.375),
+                Inches.of(18.66694637),
                 new Rotation3d(Rotations.zero(), getAngle(), azimuthAngle.get()))
             .transformBy(
-                new Transform3d(Inches.of(6), Inches.zero(), Inches.zero(), Rotation3d.kZero)));
+                new Transform3d(
+                    Inches.of(3.77617094), Inches.zero(), Inches.zero(), Rotation3d.kZero)));
   }
 }

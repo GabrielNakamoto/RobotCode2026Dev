@@ -14,7 +14,6 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.RobotConfig.SuperStructureState;
 import frc.robot.util.PhoenixSync;
 import frc.robot.util.ShiftTracker;
-
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
@@ -83,14 +82,15 @@ public class Robot extends LoggedRobot {
     m_robotContainer.drive.setIdle();
     m_robotContainer.superStructure.setState(SuperStructureState.IDLE);
 
-		ShiftTracker.initialize();
+    ShiftTracker.initialize();
   }
 
   @Override
   public void teleopPeriodic() {
-		double timeRemaining = ShiftTracker.shiftTimeRemaining();
-		m_robotContainer.driveController.setRumble(RumbleType.kBothRumble, timeRemaining <= 10.0 ? (10.0 - timeRemaining) / 10.0 : 0.0);
-	}
+    double timeRemaining = ShiftTracker.shiftTimeRemaining();
+    m_robotContainer.driveController.setRumble(
+        RumbleType.kBothRumble, timeRemaining <= 10.0 ? (10.0 - timeRemaining) / 10.0 : 0.0);
+  }
 
   @Override
   public void teleopExit() {}
