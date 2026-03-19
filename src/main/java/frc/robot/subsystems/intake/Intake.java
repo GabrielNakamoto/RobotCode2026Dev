@@ -2,6 +2,9 @@ package frc.robot.subsystems.intake;
 
 import static edu.wpi.first.units.Units.*;
 
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.RobotConfig.IntakeConstants;
 import frc.robot.subsystems.intake.IntakeIO.IntakeIOOutputs;
@@ -35,6 +38,10 @@ public class Intake extends StateSubsystem<IntakeState> {
     io.updateInputs(inputs);
     Logger.processInputs("Intake", inputs);
     Logger.recordOutput("Intake/state", getCurrentState());
+    Distance intakePostion = inputs.extendPosition;
+    Distance intakeZ = Meters.of(Math.sin(8.0) * intakePostion.in(Meters));
+    Distance intakeX = Meters.of(Math.cos(8.0) * intakePostion.in(Meters));
+    Logger.recordOutput("Intake/IntakePose", new Pose3d(intakeX, Meters.zero(), intakeZ.unaryMinus(), Rotation3d.kZero));
 
     applyState();
     io.applyOutputs(outputs);
