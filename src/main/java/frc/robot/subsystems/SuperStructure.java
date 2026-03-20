@@ -174,13 +174,15 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
         Logger.recordOutput("SuperStructure/azimuthWithinTolerance", azimuthWithinTolerance);
         Logger.recordOutput("SuperStructure/upToSpeed", upToSpeed);
 
+				if (state == SuperStructureState.SHOOT_INTAKE) {
+					intake.run();
+				}
+
         if (RobotConfig.getMode() == OperationMode.SIM) {
           simulateTurretShot(turretParams);
         }
         if (upToSpeed && hoodWithinTolerance && azimuthWithinTolerance) {
-          if (state == SuperStructureState.SHOOT_INTAKE) {
-            intake.run();
-          } else {
+          if (state != SuperStructureState.SHOOT_INTAKE) {
             intake.agitate();
           }
           spindexer.feed();
@@ -194,8 +196,8 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
       spindexer.cooldown();
     }
 
-		if (FieldConstants.inNeutralZone(RobotState.getInstance().getEstimatedPose())) {
-			hood.setAngle(Degrees.of(0.0));
-		}
+    if (FieldConstants.underTrench(RobotState.getInstance().getEstimatedPose())) {
+      hood.setAngle(Degrees.of(0.0));
+    }
   }
 }

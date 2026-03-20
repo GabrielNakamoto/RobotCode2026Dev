@@ -47,11 +47,12 @@ public class TurretCalculator {
     // Passing hood angles
     passingHoodAngleMap.put(3.5, Rotation2d.fromDegrees(11.0));
     passingHoodAngleMap.put(4.0, Rotation2d.fromDegrees(12.5));
-    passingHoodAngleMap.put(4.5, Rotation2d.fromDegrees(12.5));
+    passingHoodAngleMap.put(4.5, Rotation2d.fromDegrees(13.75));
 
     // Passing launcher angles
     passingLauncherSpeedMap.put(3.5, 24.0);
     passingLauncherSpeedMap.put(4.0, 25.3);
+    passingLauncherSpeedMap.put(4.5, 27.5);
 
     // Hood angle in
     newHoodLUT.put(1.5, Rotation2d.fromDegrees(5.0));
