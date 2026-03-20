@@ -59,7 +59,8 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
   }
 
   public boolean isIntaking() {
-    return getCurrentState() == SuperStructureState.INTAKE || getCurrentState() == SuperStructureState.SHOOT_INTAKE;
+    return getCurrentState() == SuperStructureState.INTAKE
+        || getCurrentState() == SuperStructureState.SHOOT_INTAKE;
   }
 
   public Command setStateCommand(SuperStructureState state) {
@@ -109,7 +110,10 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
       RobotState.getInstance()
           .getFuelSim()
           .launchFuel(
-              launchSpeed, params.hoodAngle().unaryMinus().plus(Degrees.of(83.0)), params.azimuthAngle(), Inches.of(18.66694637));
+              launchSpeed,
+              params.hoodAngle().unaryMinus().plus(Degrees.of(83.0)),
+              params.azimuthAngle(),
+              Inches.of(18.66694637));
       // fuelSim.launchFuel(null, null, null, null);
       simShotTimer.restart();
     }
@@ -187,7 +191,9 @@ public class SuperStructure extends StateSubsystem<SuperStructureState> {
           intake.run();
         }
 
-        if (RobotConfig.getMode() == OperationMode.SIM && hoodWithinTolerance && azimuthWithinTolerance) {
+        if (RobotConfig.getMode() == OperationMode.SIM
+            && hoodWithinTolerance
+            && azimuthWithinTolerance) {
           simulateTurretShot(turretParams);
         }
 

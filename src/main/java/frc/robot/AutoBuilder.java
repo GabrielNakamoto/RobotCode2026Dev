@@ -207,13 +207,13 @@ public class AutoBuilder {
         .generate(drive, superStructure);
   }
 
-  /*public static Command doubleSwipeBumpExit(
-      Drive drive, SuperStructure superStructure, boolean shouldFlipYAxis) {
-    return new AutoBuilder2(shouldFlipYAxis)
-    .withStateChange(SuperStructureState.INTAKE)
-    .withChoreoTraj("FullFuelSwipeBump")
-    .withStateChange(SuperStructureState.SHOOT)
-  }*/
+  public static Command experimentalSwipe(
+      Drive drive, SuperStructure superStructure, boolean flipY) {
+    return swipeTemplate("MogSwipe", true, flipY)
+        .withDelay(4.0)
+        .join(cleanSwipeTemplate(flipY))
+        .generate(drive, superStructure);
+  }
 
   public static Command doubleSwipeOutpost(Drive drive, SuperStructure superStructure) {
     return fullSwipeTemplate(false)
@@ -297,5 +297,8 @@ public class AutoBuilder {
     autoChooser.addOption("2xDepot", doubleSwipeDepot(drive, superStructure));
     autoChooser.addOption("PassR", passSweep(drive, superStructure, false));
     autoChooser.addOption("PassL", passSweep(drive, superStructure, true));
+
+    autoChooser.addOption("expR", experimentalSwipe(drive, superStructure, false));
+    autoChooser.addOption("expL", experimentalSwipe(drive, superStructure, true));
   }
 }

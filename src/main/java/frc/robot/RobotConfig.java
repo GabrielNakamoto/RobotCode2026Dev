@@ -88,7 +88,7 @@ public class RobotConfig {
 
     public static final PIDGains choreoXGains = new PIDGains(7.5, 0.0, 0.0);
     public static final PIDGains choreoYGains = new PIDGains(7.5, 0.0, 0.0);
-    public static final PIDGains choreoOmegaGains = new PIDGains(4.5, 0.0, 0.0);
+    public static final PIDGains choreoOmegaGains = new PIDGains(5.25, 0.0, 0.0);
   }
 
   public static final class SpindexerConstants {
