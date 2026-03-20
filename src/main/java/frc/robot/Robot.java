@@ -70,7 +70,7 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void autonomousExit() {
-    RobotState.getInstance().captureRewind(20.0);
+    RobotState.getInstance().getVision().captureRewind(20.0);
   }
 
   @Override

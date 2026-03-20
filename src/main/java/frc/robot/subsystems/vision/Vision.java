@@ -25,6 +25,7 @@ public class Vision extends SubsystemBase {
     for (int i = 0; i < cameras.length; ++i) {
       cameraInputs[i] = new VisionIOInputsAutoLogged();
     }
+    RobotState.getInstance().registerVision(this);
   }
 
   @Override

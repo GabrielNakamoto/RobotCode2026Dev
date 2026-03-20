@@ -89,7 +89,8 @@ public class AutoBuilder {
             case CHOREO_TRAJ -> drive.followChoreoTrajectoryCommand(trajectories.get(ctxIndex));
             case COMMAND -> miscCommands.get(ctxIndex);
             case CAPTURE_REWIND ->
-                Commands.runOnce(() -> RobotState.getInstance().captureRewind(autoTimer.get()));
+                Commands.runOnce(
+                    () -> RobotState.getInstance().getVision().captureRewind(autoTimer.get()));
           });
       String key = "Auto/" + n + "-" + node.name();
       commands.add(Commands.runOnce(() -> Logger.recordOutput(key, autoTimer.get())));

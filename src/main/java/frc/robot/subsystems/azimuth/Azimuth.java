@@ -11,6 +11,7 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotConfig.TurretConstants;
+import frc.robot.RobotConfig.VisionConstants;
 import frc.robot.RobotState;
 import org.littletonrobotics.junction.Logger;
 
@@ -50,12 +51,13 @@ public class Azimuth extends SubsystemBase {
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Azimuth", inputs);
-    var pose = getTurretCameraPose();
-    var transform = new Transform3d(pose.getTranslation(), pose.getRotation());
+
+    RobotState.getInstance()
+        .getVision()
+        .setRobotToCamera(
+            VisionConstants.turretConfig.name(), getTurretCameraPose().minus(new Pose3d()));
+
     Logger.recordOutput("Azimuth/adjustedPosition", getAngle());
-    Logger.recordOutput(
-        "Azimuth/TurretCameraPose",
-        new Pose3d(RobotState.getInstance().getEstimatedPose()).plus(transform));
     Logger.recordOutput(
         "Azimuth/TurretPose",
         new Pose3d(
