@@ -1,106 +1,104 @@
 package frc.robot.subsystems.vision;
 
-import static edu.wpi.first.units.Units.Seconds;
+import static edu.wpi.first.units.Units.*;
 
 import edu.wpi.first.math.VecBuilder;
-import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.RobotConfig.CameraConfig;
-import frc.robot.RobotConfig.VisionConstants;
+import frc.robot.FieldConstants;
+import frc.robot.RobotConfig.*;
 import frc.robot.RobotState;
 import frc.robot.RobotState.VisionObservation;
+import frc.robot.subsystems.vision.VisionIO.VisionIOInputs;
+import java.util.Arrays;
+import java.util.Optional;
 import org.littletonrobotics.junction.Logger;
 
 public class Vision extends SubsystemBase {
   private final VisionIO[] cameras;
-  private final CameraConfig[] configs;
-  private VisionIOInputsAutoLogged[] inputs;
-
-  // Diagnostic counters
-  private int acceptedMeasurements = 0;
-  private int rejectedMeasurements = 0;
-  private int hubObservations = 0;
-
-  private Pose2d lastPoseEstimate = Pose2d.kZero;
+  private VisionIOInputsAutoLogged[] cameraInputs;
 
   public Vision(VisionIO... cameras) {
     this.cameras = cameras;
-    this.inputs = new VisionIOInputsAutoLogged[cameras.length];
-    this.configs = new CameraConfig[cameras.length];
-
+    this.cameraInputs = new VisionIOInputsAutoLogged[cameras.length];
     for (int i = 0; i < cameras.length; ++i) {
-      this.configs[i] = cameras[i].getConfig();
-      this.inputs[i] = new VisionIOInputsAutoLogged();
+      cameraInputs[i] = new VisionIOInputsAutoLogged();
     }
-    RobotState.getInstance().registerRewindCallback(this::captureRewind);
   }
 
   @Override
   public void periodic() {
     for (int i = 0; i < cameras.length; ++i) {
-      cameras[i].updateInputs(inputs[i]);
-      Logger.processInputs("Vision/" + configs[i].name(), inputs[i]);
+      cameras[i].updateInputs(cameraInputs[i]);
+      Logger.processInputs("Vision/" + cameras[i].getConfig().name(), cameraInputs[i]);
 
-      if (configs[i].filter().isPresent() && !configs[i].filter().get().getAsBoolean()) continue;
-
-      var state = inputs[i];
-      if (!state.isConnected) continue;
-
-      // Global Pose Processing
-      if (shouldAcceptMeasurement(state)) {
-        Vector<N3> stdDevVec =
-            VecBuilder.fill(
-                state.stdDevs.get(0, 0), state.stdDevs.get(1, 0), state.stdDevs.get(2, 0));
-
-        // Diagnostic logging for debugging vision pose estimation
-        String camName = configs[i].name();
-        Logger.recordOutput("Vision/" + camName + "/acceptedStdDevX", stdDevVec.get(0));
-        Logger.recordOutput("Vision/" + camName + "/acceptedStdDevY", stdDevVec.get(1));
-        Logger.recordOutput("Vision/" + camName + "/acceptedStdDevYaw", stdDevVec.get(2));
-        Logger.recordOutput("Vision/" + camName + "/acceptedPose", state.poseEstimate);
-        Logger.recordOutput("Vision/" + camName + "/acceptedTimestamp", state.timestamp);
-
-        RobotState.getInstance()
-            .addVisionMeasurement(
-                new VisionObservation(
-                    configs[i], state.poseEstimate, stdDevVec, Seconds.of(state.timestamp)));
-        acceptedMeasurements++;
-      } else if (state.numTags > 0) {
-        rejectedMeasurements++;
-      }
+      processCamera(cameras[i].getConfig(), cameraInputs[i])
+          .ifPresent(obsv -> RobotState.getInstance().addVisionMeasurement(obsv));
     }
-
-    // Log diagnostic counters
-    Logger.recordOutput("Vision/acceptedMeasurements", acceptedMeasurements);
-    Logger.recordOutput("Vision/rejectedMeasurements", rejectedMeasurements);
-    Logger.recordOutput("Vision/hubObservations", hubObservations);
   }
 
-  private boolean shouldAcceptMeasurement(VisionIOInputsAutoLogged state) {
-    if (state.numTags == 0 || state.avgTagDist > VisionConstants.maxAcceptableDistance) {
+  private static Optional<VisionObservation> processCamera(
+      CameraConfig config, VisionIOInputs inputs) {
+    if (!isTrustableMeasurement(inputs)) return Optional.empty();
+
+    double scale = 1.0 / inputs.mt1.quality();
+
+    double xStd = inputs.stddevs[0] * scale;
+    double yStd = inputs.stddevs[1] * scale;
+    double yawStd = inputs.stddevs[5] * scale;
+
+    return Optional.of(
+        new VisionObservation(
+            config,
+            inputs.mt1.pose(),
+            VecBuilder.fill(Math.max(xStd, yStd), Math.max(xStd, yStd), yawStd),
+            Seconds.of(inputs.mt1.timestamp())));
+  }
+
+  private static boolean isTrustableMeasurement(VisionIOInputs inputs) {
+    var estimate = inputs.mt1;
+    Pose2d pose = estimate.pose();
+
+    boolean tagless = estimate.tagCount() == 0;
+    boolean tooHigh =
+        inputs.pose3d == null ? false : Math.abs(inputs.pose3d.getZ()) > VisionConstants.zThreshold;
+    boolean outofbounds =
+        pose.getX() < 0.0
+            || pose.getMeasureX().gt(FieldConstants.fieldLength)
+            || pose.getY() < 0.0
+            || pose.getMeasureY().gt(FieldConstants.fieldWidth);
+
+    if (tagless || tooHigh || outofbounds) {
       return false;
     }
 
-    // Pose2d fusedEstimate = RobotState.getInstance().getEstimatedPose();
-    // double latentDistance =
-    // state.poseEstimate.getTranslation().getDistance(fusedEstimate.getTranslation());
-    // if (latentDistance > 3.5) return false; dont do it this way, just check the difference
-    // between vision estimates
+    if (estimate.tagCount() < 2) {
+      boolean ambiguous =
+          Arrays.stream(inputs.fiducials)
+              .filter(f -> f.ambiguity() > VisionConstants.maxSingleTagAmbiguity)
+              .findAny()
+              .isPresent();
+      boolean smallArea = estimate.avgTagArea() < VisionConstants.minSingleTagArea;
 
-    if (state.stdDevs != null) {
-      double maxStd = Math.max(state.stdDevs.get(0, 0), state.stdDevs.get(1, 0));
-      if (maxStd > VisionConstants.maxAcceptableStddev) {
-        return false;
-      }
+      if (ambiguous || smallArea) return false;
     }
 
     return true;
   }
 
+  public boolean setRobotToCamera(String cameraName, Transform3d robotToCamera) {
+    for (int i = 0; i < cameras.length; ++i) {
+      if (cameras[i].getConfig().name().equals(cameraName)) {
+        cameras[i].setRobotToCamera(robotToCamera);
+        return true;
+      }
+    }
+    return false;
+  }
+
   public void captureRewind(double duration) {
-    for (VisionIO camera : cameras) {
+    for (var camera : cameras) {
       camera.captureRewind(duration);
     }
   }

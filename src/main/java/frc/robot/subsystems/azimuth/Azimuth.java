@@ -30,16 +30,6 @@ public class Azimuth extends SubsystemBase {
     this.io.setAngle(robotAngle.minus(TurretConstants.robotToTurret.getRotation().getMeasureZ()));
   }
 
-  public boolean isCameraAccurate() {
-    double positionRots = inputs.position.in(Rotations);
-    boolean acc = true;
-    if (positionRots < 0 && positionRots > -0.20) acc = false;
-    if (positionRots > 0 && positionRots < 0.15) acc = false;
-    Logger.recordOutput("Azimuth/cameraEnabled", acc);
-    // return acc;
-    return true;
-  }
-
   public Pose3d getTurretCameraPose() {
     Angle adjustedAzimuth = getAngle();
 
