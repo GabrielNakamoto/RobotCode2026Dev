@@ -1,5 +1,9 @@
 package frc.robot.subsystems.vision;
 
+import static edu.wpi.first.units.Units.*;
+
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -14,6 +18,8 @@ public class VisionIOLimelight implements VisionIO {
   public VisionIOLimelight(CameraConfig config) {
     this.config = config;
     this.NT = NetworkTableInstance.getDefault().getTable(config.name());
+
+    LimelightHelpers.setRewindEnabled(config.name(), true);
   }
 
   @Override
@@ -23,6 +29,14 @@ public class VisionIOLimelight implements VisionIO {
 
   @Override
   public void updateInputs(VisionIOInputs inputs) {
+    if (DriverStation.isDisabled()) {
+      LimelightHelpers.SetIMUMode(config.name(), 1);
+      LimelightHelpers.SetThrottle(config.name(), 1000);
+    } else {
+      LimelightHelpers.SetIMUMode(config.name(), 3);
+      LimelightHelpers.SetThrottle(config.name(), 0);
+    }
+
     inputs.seesTarget = NT.getEntry("tv").getDouble(0.0) == 1.0;
     if (!inputs.seesTarget) return;
 
@@ -43,5 +57,28 @@ public class VisionIOLimelight implements VisionIO {
     } catch (Exception e) {
       DriverStation.reportWarning("Vision update failed: " + e.getMessage(), false);
     }
+  }
+
+  @Override
+  public void setRobotToCamera(Transform3d robotToCamera) {
+    LimelightHelpers.setCameraPose_RobotSpace(
+        config.name(),
+        robotToCamera.getX(),
+        robotToCamera.getY(),
+        robotToCamera.getZ(),
+        robotToCamera.getRotation().getMeasureX().in(Degrees),
+        robotToCamera.getRotation().getMeasureY().in(Degrees),
+        robotToCamera.getRotation().getMeasureZ().in(Degrees));
+  }
+
+  @Override
+  public void setRobotOrientation(Rotation2d gyroYaw) {
+    LimelightHelpers.SetRobotOrientation(
+        config.name(), gyroYaw.getDegrees(), 0.0, 0.0, 0.0, 0.0, 0.0);
+  }
+
+  @Override
+  public void captureRewind(double duration) {
+    LimelightHelpers.triggerRewindCapture(config.name(), duration);
   }
 }

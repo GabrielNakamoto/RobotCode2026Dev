@@ -88,14 +88,11 @@ public class Vision extends SubsystemBase {
     return true;
   }
 
-  public boolean setRobotToCamera(String cameraName, Transform3d robotToCamera) {
-    for (int i = 0; i < cameras.length; ++i) {
-      if (cameras[i].getConfig().name().equals(cameraName)) {
-        cameras[i].setRobotToCamera(robotToCamera);
-        return true;
-      }
-    }
-    return false;
+  public void setRobotToCamera(String cameraName, Transform3d robotToCamera) {
+    Arrays.stream(cameras)
+        .filter(c -> c.getConfig().name().equals(cameraName))
+        .findAny()
+        .ifPresent(c -> c.setRobotToCamera(robotToCamera));
   }
 
   public void captureRewind(double duration) {
