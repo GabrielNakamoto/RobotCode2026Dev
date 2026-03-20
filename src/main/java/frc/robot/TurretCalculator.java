@@ -93,10 +93,10 @@ public class TurretCalculator {
 
   public static TurretParameters calculateSetpoints(
       RobotConfig.TurretTarget trackingTarget, Angle currentAzimuthAngle) {
-		boolean passing = FieldConstants.inNeutralZone(RobotState.getInstance().getEstimatedPose());
+    boolean passing = FieldConstants.inNeutralZone(RobotState.getInstance().getEstimatedPose());
     Translation2d target =
-        AllianceFlip.apply(passing ? getPassingTarget()
-                : FieldConstants.hubCenter.toTranslation2d());
+        AllianceFlip.apply(
+            passing ? getPassingTarget() : FieldConstants.hubCenter.toTranslation2d());
     Logger.recordOutput("TurretCalculator/target", new Translation3d(target));
     switch (trackingTarget) {
       case DEFAULT:
@@ -153,8 +153,11 @@ public class TurretCalculator {
     Logger.recordOutput("Tuning/hubDistance", hubDistance);
     return new TurretParameters(
         calculateAzimuthAngle(azimuth.getMeasure(), currentAzimuthAngle),
-        passing ? passingHoodAngleMap.get(hubDistance).getMeasure() : Degrees.of(hoodRegression(hubDistance)),
-        RotationsPerSecond.of(passing ? passingLauncherSpeedMap.get(hubDistance) : shotRegression(hubDistance)));
+        passing
+            ? passingHoodAngleMap.get(hubDistance).getMeasure()
+            : Degrees.of(hoodRegression(hubDistance)),
+        RotationsPerSecond.of(
+            passing ? passingLauncherSpeedMap.get(hubDistance) : shotRegression(hubDistance)));
   }
 
   // https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/dynamic-shooting.html
@@ -167,7 +170,8 @@ public class TurretCalculator {
                 RobotState.getInstance().getRobotVelocity(),
                 TurretConstants.robotToTurret.getTranslation().toTranslation2d())
             .rotateBy(robotPose.getRotation());
-    if (fieldVelocity.getNorm() < 0.25) return getStationarySetpoint(target, passing, currentAzimuthAngle);
+    if (fieldVelocity.getNorm() < 0.25)
+      return getStationarySetpoint(target, passing, currentAzimuthAngle);
     double distance = turretPose.getTranslation().getDistance(target);
     double tof = tofRegression(distance);
     for (int i = 0; i < kMaxIterations; ++i) {
@@ -183,8 +187,11 @@ public class TurretCalculator {
     Rotation2d azimuthAngle = aimVector.getAngle().minus(robotPose.getRotation());
     return new TurretParameters(
         calculateAzimuthAngle(azimuthAngle.getMeasure(), currentAzimuthAngle),
-        passing ? passingHoodAngleMap.get(distance).getMeasure() : Degrees.of(hoodRegression(distance)),
-        RotationsPerSecond.of(passing ? passingLauncherSpeedMap.get(distance) : shotRegression(distance)));
+        passing
+            ? passingHoodAngleMap.get(distance).getMeasure()
+            : Degrees.of(hoodRegression(distance)),
+        RotationsPerSecond.of(
+            passing ? passingLauncherSpeedMap.get(distance) : shotRegression(distance)));
   }
 
   private static Translation2d rigidPointVelocity(ChassisSpeeds speeds, Translation2d r) {

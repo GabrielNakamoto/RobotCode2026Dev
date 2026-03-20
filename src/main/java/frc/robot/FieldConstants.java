@@ -50,7 +50,7 @@ public class FieldConstants {
           aprilLayout.getTagPose(28).get().getMeasureY());
 
   public static boolean underTrench(Pose2d pose) {
-		pose = AllianceFlip.apply(pose);
+    pose = AllianceFlip.apply(pose);
     return pose.getMeasureX().lt(neutralZoneStart.plus(trenchDepth.div(2.0)))
         && pose.getMeasureX().gt(neutralZoneStart.minus(trenchDepth.div(2.0)))
         && (pose.getMeasureY().lt(trenchWidth)
